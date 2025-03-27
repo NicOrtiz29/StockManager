@@ -11,6 +11,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { updateStock } from '../services/productService';
+import { registrarVenta } from '../services/ventaService';
+import { auth } from '../config/firebaseConfig';
 
 const CartScreen = ({ route, navigation }) => {
   const { cart, updateCart } = route.params;
@@ -54,37 +56,36 @@ const CartScreen = ({ route, navigation }) => {
   const handleCheckout = async () => {
     setLoading(true);
     try {
-      // 1. Registrar la venta en Firestore
-      await registrarVenta(
-        calculateTotal(),
-        cartItems,
-        auth.currentUser?.uid // Opcional: ID del usuario autenticado
-      );
+      const total = calculateTotal();
+      const usuarioId = auth.currentUser?.uid || null; // Si tienes usuarios autenticados
+  
+      // 1. Guardar la venta en Firestore
+      const nuevaVenta = await registrarVenta(total, cartItems, usuarioId);
   
       // 2. Actualizar los stocks
       await Promise.all(
-        cartItems.map(item => 
-          updateStock(item.id, item.quantity)
-        )
+        cartItems.map(item => updateStock(item.id, item.quantity))
       );
   
       Alert.alert(
         'Compra exitosa', 
-        `Venta registrada correctamente\nTotal: $${calculateTotal().toFixed(2)}`
+        `Venta registrada correctamente\nTotal: $${total.toFixed(2)}`
       );
-      
+  
       // 3. Vaciar el carrito
       setCartItems([]);
       updateCart([]);
-      
+  
       // 4. Redirigir al historial de ventas
       navigation.navigate('HistorialVentas');
+  
     } catch (error) {
       Alert.alert('Error', error.message || 'No se pudo completar la venta');
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <LinearGradient colors={['#000428', '#004e92']} style={styles.fullScreen}>
