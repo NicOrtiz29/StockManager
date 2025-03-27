@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   TextInput, 
@@ -7,7 +7,10 @@ import {
   StyleSheet, 
   Text, 
   Image,
-  Dimensions 
+  Dimensions,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { login } from '../services/authService';
@@ -20,92 +23,143 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const navigation = useNavigation();
 
   const handleLogin = async () => {
-    try {
-      await login(email, password);
-      navigation.navigate('MainMenu');
-    } catch (error) {
-      Alert.alert('Error', error.message);
+    if (!email.trim() || !password.trim()) {
+      setError('Por favor ingresa email y contraseña');
+      return;
     }
+
+    setLoading(true);
+    setError(null);
+    
+    const { success, user, error: loginError } = await login(email, password);
+    
+    if (success) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'MainMenu' }],
+      });
+    } else {
+      setError(loginError);
+    }
+    
+    setLoading(false);
   };
 
   return (
-    <LinearGradient
-      colors={['#000428', '#004e92']}
-      style={styles.container}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardAvoiding}
     >
-      <View style={styles.content}>
-        {/* Logo */}
-        <Image
-          source={require('../../assets/tln.png')}
-          style={styles.logo}
-        />
-        
-        {/* Título */}
-        <Text style={styles.title}>TLN AUTORRADIO</Text>
-        <Text style={styles.subtitle}>Iniciar Sesión</Text>
-
-        {/* Campo Email */}
-        <View style={styles.inputContainer}>
-          <Ionicons name="mail" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
-          <TextInput
-            placeholder="Email"
-            placeholderTextColor="rgba(255,255,255,0.5)"
-            value={email}
-            onChangeText={setEmail}
-            style={styles.input}
-            keyboardType="email-address"
-            autoCapitalize="none"
+      <LinearGradient
+        colors={['#000428', '#004e92']}
+        style={styles.container}
+      >
+        <View style={styles.content}>
+          {/* Logo */}
+          <Image
+            source={require('../../assets/tln.png')}
+            style={styles.logo}
+            resizeMode="contain"
           />
-        </View>
+          
+          {/* Título */}
+          <Text style={styles.title}>TLN AUTORRADIO</Text>
+          <Text style={styles.subtitle}>Iniciar Sesión</Text>
 
-        {/* Campo Contraseña */}
-        <View style={styles.inputContainer}>
-          <Ionicons name="lock-closed" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
-          <TextInput
-            placeholder="Contraseña"
-            placeholderTextColor="rgba(255,255,255,0.5)"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-            style={styles.input}
-          />
-          <TouchableOpacity 
-            onPress={() => setShowPassword(!showPassword)}
-            style={styles.eyeIcon}
-          >
-            <Ionicons 
-              name={showPassword ? "eye-off" : "eye"} 
-              size={20} 
-              color="rgba(255,255,255,0.7)" 
+          {/* Mensaje de error */}
+          {error && (
+            <View style={styles.errorContainer}>
+              <Ionicons name="warning" size={18} color="#ff4444" />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
+          {/* Campo Email */}
+          <View style={styles.inputContainer}>
+            <Ionicons name="mail" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
+            <TextInput
+              placeholder="Email"
+              placeholderTextColor="rgba(255,255,255,0.5)"
+              value={email}
+              onChangeText={setEmail}
+              style={styles.input}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
             />
+          </View>
+
+          {/* Campo Contraseña */}
+          <View style={styles.inputContainer}>
+            <Ionicons name="lock-closed" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
+            <TextInput
+              placeholder="Contraseña"
+              placeholderTextColor="rgba(255,255,255,0.5)"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              style={styles.input}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <TouchableOpacity 
+              onPress={() => setShowPassword(!showPassword)}
+              style={styles.eyeIcon}
+            >
+              <Ionicons 
+                name={showPassword ? "eye-off" : "eye"} 
+                size={20} 
+                color="rgba(255,255,255,0.7)" 
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Botón de inicio de sesión */}
+          <TouchableOpacity 
+            onPress={handleLogin}
+            style={styles.loginButton}
+            activeOpacity={0.8}
+            disabled={loading}
+          >
+            <LinearGradient
+              colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.1)']}
+              style={styles.buttonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Text style={styles.buttonText}>INICIAR SESIÓN</Text>
+                  <Ionicons name="arrow-forward" size={20} color="white" />
+                </>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Enlace para recuperar contraseña */}
+          <TouchableOpacity 
+            style={styles.forgotPassword}
+            onPress={() => navigation.navigate('ResetPassword')}
+          >
+            <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Botón de inicio de sesión */}
-        <TouchableOpacity 
-          onPress={handleLogin}
-          style={styles.loginButton}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.1)']}
-            style={styles.buttonGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <Text style={styles.buttonText}>INICIAR SESIÓN</Text>
-            <Ionicons name="arrow-forward" size={20} color="white" />
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-    </LinearGradient>
+      </LinearGradient>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
+  keyboardAvoiding: {
+    flex: 1
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -115,8 +169,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: width * 0.3,
-    height: width * 0.3,
+    width: width * 0.4,
+    height: width * 0.4,
     marginBottom: 20,
   },
   title: {
@@ -131,7 +185,7 @@ const styles = StyleSheet.create({
   subtitle: {
     color: 'rgba(255,255,255,0.8)',
     fontSize: 16,
-    marginBottom: 40,
+    marginBottom: 30,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -140,7 +194,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 10,
     paddingHorizontal: 15,
-    marginBottom: 20,
+    marginBottom: 15,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
@@ -151,7 +205,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: 'white',
     height: 50,
-    paddingVertical: 0, // Asegura que el texto esté centrado verticalmente
+    paddingVertical: 0,
   },
   eyeIcon: {
     padding: 10,
@@ -179,6 +233,27 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     marginRight: 10,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 68, 68, 0.1)',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 15,
+    width: '100%',
+  },
+  errorText: {
+    color: '#ff4444',
+    marginLeft: 8,
+    fontSize: 14,
+  },
+  forgotPassword: {
+    marginTop: 15,
+  },
+  forgotPasswordText: {
+    color: 'rgba(255,255,255,0.7)',
+    textDecorationLine: 'underline',
   },
 });
 

@@ -35,7 +35,7 @@ const MainMenuScreen = ({ navigation }) => {
       action: () => navigation.navigate('BulkPriceUpdate')
     },
     {
-      title: "En proceso",
+      title: "Historial Ventas",
       icon: "trending-up",
       action: () => navigation.navigate('HistorialVentas')
     },
