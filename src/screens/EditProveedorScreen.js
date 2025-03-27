@@ -32,7 +32,7 @@ const EditProveedorScreen = ({ route, navigation }) => {
     const loadData = async () => {
       try {
         const proveedorData = await getProveedorById(proveedorId);
-        console.log("Datos del proveedor:", proveedorData); // Verifica si muestra las familias
+       // console.log("Datos del proveedor:", proveedorData); // Verifica si muestra las familias
         
         if (proveedorData) {
           setNombre(proveedorData.nombre || "");
@@ -44,9 +44,9 @@ const EditProveedorScreen = ({ route, navigation }) => {
           // Si proveedorData tiene familias, guárdalas en el estado
           if (proveedorData.familias) {
             setFamilias(proveedorData.familias);
-            console.log("Familias cargadas:", proveedorData.familias);
+            //console.log("Familias cargadas:", proveedorData.familias);
           } else {
-            console.log("No hay familias disponibles.");
+           // console.log("No hay familias disponibles.");
           }
         }
       } catch (error) {

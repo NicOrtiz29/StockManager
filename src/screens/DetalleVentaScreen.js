@@ -1,10 +1,11 @@
+// DetalleVentaScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { obtenerDetalleVenta } from '../services/ventaService';
+import { obtenerDetalleVenta } from '../services/ventaService'; // Asegúrate de importar el servicio
 
 const DetalleVentaScreen = ({ route }) => {
-  const { ventaId } = route.params;
+  const { ventaId } = route.params; // El ID de la venta que viene desde la navegación
   const [venta, setVenta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,7 +14,7 @@ const DetalleVentaScreen = ({ route }) => {
     const cargarDetalle = async () => {
       try {
         const detalle = await obtenerDetalleVenta(ventaId);
-        setVenta(detalle);
+        setVenta(detalle); // Guardamos la venta con los productos
         setError(null);
       } catch (err) {
         console.error('Error al cargar detalle:', err);
@@ -24,8 +25,8 @@ const DetalleVentaScreen = ({ route }) => {
       }
     };
 
-    cargarDetalle();
-  }, [ventaId]);
+    cargarDetalle(); // Cargamos los datos cuando el componente se monta
+  }, [ventaId]); // Solo se ejecutará cuando `ventaId` cambie
 
   if (loading) {
     return (
@@ -49,31 +50,32 @@ const DetalleVentaScreen = ({ route }) => {
     <LinearGradient colors={['#000428', '#004e92']} style={styles.fullScreen}>
       <View style={styles.container}>
         <Text style={styles.title}>Detalle de Venta #{ventaId}</Text>
-        
+
         <View style={styles.infoContainer}>
           <Text style={styles.infoLabel}>Fecha:</Text>
           <Text style={styles.infoValue}>
-            {venta.fecha.toLocaleDateString()} {venta.fecha.toLocaleTimeString()}
+            {venta.fecha.toDate().toLocaleDateString()} {venta.fecha.toDate().toLocaleTimeString()}
           </Text>
         </View>
 
         <Text style={styles.sectionTitle}>Productos:</Text>
-        
+
         <FlatList
-          data={venta.items}
-          keyExtractor={(item, index) => item.id || `item-${index}`}
-          renderItem={({ item }) => (
-            <View style={styles.itemContainer}>
-              <Text style={styles.productName}>{item.nombre || 'Producto sin nombre'}</Text>
-              <Text style={styles.productDetail}>
-                {item.cantidad || 0} x ${(item.precioUnitario || 0).toFixed(2)} = ${(item.subtotal || 0).toFixed(2)}
-              </Text>
-            </View>
-          )}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>No hay productos en esta venta</Text>
-          }
-        />
+  data={venta.items} // Cambié productos por items
+  keyExtractor={(item, index) => item.productoId || `item-${index}`} // Asegúrate de usar el campo correcto para el id
+  renderItem={({ item }) => (
+    <View style={styles.itemContainer}>
+      <Text style={styles.productName}>{item.nombre || 'Producto sin nombre'}</Text>
+      <Text style={styles.productDetail}>
+        {item.cantidad || 0} x ${(item.precioUnitario || 0).toFixed(2)} = ${(item.precioUnitario * (item.cantidad || 0)).toFixed(2)}
+      </Text>
+    </View>
+  )}
+  ListEmptyComponent={
+    <Text style={styles.emptyText}>No hay productos en esta venta</Text>
+  }
+/>
+
 
         <View style={styles.totalContainer}>
           <Text style={styles.totalText}>TOTAL: ${venta.total?.toFixed(2) || '0.00'}</Text>

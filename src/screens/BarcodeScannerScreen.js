@@ -12,7 +12,7 @@ const BarcodeScannerScreen = ({ navigation, route }) => {
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestPermissionsAsync();
-      console.log('Status del permiso:', status);  // Verifica el estado del permiso
+    //  console.log('Status del permiso:', status);  // Verifica el estado del permiso
       setHasPermission(status === 'granted');
     })();
   }, []);

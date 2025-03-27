@@ -16,6 +16,8 @@ export const registrarVenta = async (itemsCarrito, totalVenta, usuarioId) => {
   try {
     // Validación exhaustiva de datos
     const itemsValidados = itemsCarrito.map(item => {
+      
+
       if (!item.id || typeof item.quantity !== 'number' || item.quantity <= 0) {
         throw new Error(`Cantidad inválida para el producto ${item.nombre || item.id}`);
       }
@@ -35,14 +37,14 @@ export const registrarVenta = async (itemsCarrito, totalVenta, usuarioId) => {
     // Preparar los datos de la venta
     const ventaData = {
       usuarioId,
-      items: itemsValidados,
+      productos: itemsValidados,
       total: totalVenta,
       fecha: serverTimestamp(),
       estado: 'completada'
     };
 
     // Validación final antes de guardar
-    if (ventaData.items.some(item => item.cantidad === undefined)) {
+    if (ventaData.productos.some(item => item.cantidad === undefined)) {
       throw new Error('Hay cantidades no definidas en los productos');
     }
 
@@ -66,7 +68,7 @@ export const registrarVenta = async (itemsCarrito, totalVenta, usuarioId) => {
   }
 };
 
-export const obtenerHistorialVentas = async () => {
+export const obtenerHistorialVentas = async (ventaId) => {
   try {
     const q = query(
       collection(db, 'ventas'), 
@@ -94,25 +96,19 @@ export const obtenerHistorialVentas = async () => {
   }
 };
 
+
 export const obtenerDetalleVenta = async (ventaId) => {
   try {
-    const docRef = doc(db, 'ventas', ventaId);
-    const docSnap = await getDoc(docRef);
-    
+    const ventaRef = doc(db, 'ventas', ventaId); // Usamos doc para obtener un documento específico
+    const docSnap = await getDoc(ventaRef); // Obtener el documento
+
     if (docSnap.exists()) {
-      const data = docSnap.data();
-      return {
-        id: docSnap.id,
-        fecha: data.fecha?.toDate() || new Date(),
-        total: data.total || 0,
-        items: Array.isArray(data.items) ? data.items : [],
-        usuarioId: data.usuarioId || '',
-        estado: data.estado || 'completada'
-      };
+      return docSnap.data(); // Retornar los datos de la venta
+    } else {
+      throw new Error('Venta no encontrada');
     }
-    throw new Error('Venta no encontrada');
   } catch (error) {
-    console.error("Error al obtener detalle de venta:", error);
+    console.error('Error al obtener detalle de la venta:', error);
     throw error;
   }
 };

@@ -36,7 +36,7 @@ const MainMenuScreen = ({ navigation }) => {
     },
     {
       title: "Historial Ventas",
-      icon: "trending-up",
+      icon: "receipt",
       action: () => navigation.navigate('HistorialVentas')
     },
 
