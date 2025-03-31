@@ -1,137 +1,154 @@
-import React, { useState, useEffect } from 'react';
-import { Text, View, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Modal } from 'react-native';
-import { Camera } from 'expo-camera';
-import { searchProductByBarcode } from '../services/productService';
+import React, { useState, useEffect } from "react";
+import {
+  Text,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  Linking,
+} from "react-native";
+// En versiones recientes, CameraType se importa por separado
+import { CameraType } from 'expo-camera';
+import { searchProductByBarcode } from "../services/productService";
+import { Ionicons } from "@expo/vector-icons";
 
 const BarcodeScannerScreen = ({ navigation, route }) => {
-  const { mode = 'search' } = route.params || {}; // 'search' o 'add'
+  const { mode = "search" } = route.params || {};
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestPermissionsAsync();
-    //  console.log('Status del permiso:', status);  // Verifica el estado del permiso
-      setHasPermission(status === 'granted');
-    })();
-  }, []);
+  const [cameraRef, setCameraRef] = useState(null);
+  const [cameraType, setCameraType] = useState(CameraType.back);
   
+  useEffect(() => {
+    const requestPermissions = async () => {
+      try {
+        const { status } = await Camera.requestCameraPermissionsAsync();
+        setHasPermission(status === "granted");
 
-  const handleBarCodeScanned = async ({ data }) => {
+        if (status !== "granted") {
+          Alert.alert(
+            "Permiso requerido",
+            "Necesitamos acceso a tu cámara para escanear códigos",
+            [
+              {
+                text: "Abrir configuración",
+                onPress: () => Linking.openSettings(),
+              },
+              {
+                text: "Cancelar",
+                style: "cancel",
+                onPress: () => navigation.goBack(),
+              },
+            ]
+          );
+        }
+      } catch (error) {
+        console.error("Error al solicitar permisos:", error);
+        setHasPermission(false);
+      }
+    };
+
+    requestPermissions();
+  }, []);
+
+  const handleBarCodeScanned = async ({ type, data }) => {
+    if (scanned || loading) return;
+
     setScanned(true);
-    
-    if (mode === 'search') {
-      await handleSearchProduct(data);
-    } else {
-      handleAddProduct(data);
-    }
-  };
-
-  const handleSearchProduct = async (barcode) => {
     setLoading(true);
+
     try {
-      const product = await searchProductByBarcode(barcode);
-      
-      if (product) {
-        Alert.alert(
-          'Producto encontrado',
-          `Nombre: ${product.nombre}\nCódigo: ${barcode}`,
-          [
-            { 
-              text: 'Ver detalles', 
-              onPress: () => navigation.navigate('EditProduct', { productId: product.id }) 
-            },
-            { text: 'OK', style: 'cancel' }
-          ]
-        );
+      console.log(`Código escaneado: ${data} (Tipo: ${type})`);
+
+      if (mode === "search") {
+        await handleSearchProduct(data);
       } else {
-        Alert.alert(
-          'Producto no encontrado',
-          `¿Deseas crear un nuevo producto con este código? (${barcode})`,
-          [
-            { 
-              text: 'Crear producto', 
-              onPress: () => navigation.navigate('AddProduct', { codigoBarras: barcode }) 
-            },
-            { text: 'Cancelar', style: 'cancel' }
-          ]
-        );
+        handleAddProduct(data);
       }
     } catch (error) {
-      Alert.alert('Error', 'No se pudo buscar el producto');
-      console.error(error);
+      console.error("Error en escaneo:", error);
+      Alert.alert("Error", "Ocurrió un problema al procesar el código");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddProduct = (barcode) => {
-    navigation.navigate('AddProduct', { codigoBarras: barcode });
+  const toggleCameraType = () => {
+    setCameraType((prevType) =>
+      prevType === CameraType.back ? CameraType.front : CameraType.back
+    );
   };
 
   if (hasPermission === null) {
     return (
-      <View style={styles.container}>
-        <Modal transparent animationType="slide" visible={hasPermission === null}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalText}>Solicitando permiso para la cámara...</Text>
-            </View>
-          </View>
-        </Modal>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+        <Text style={styles.loadingText}>Solicitando permisos...</Text>
       </View>
     );
   }
+
   if (hasPermission === false) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.noPermissionText}>Sin acceso a la cámara</Text>
+      <View style={styles.permissionDeniedContainer}>
+        <Text style={styles.permissionDeniedText}>
+          No se otorgaron permisos para usar la cámara
+        </Text>
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={() => Linking.openSettings()}
+        >
+          <Text style={styles.settingsButtonText}>Abrir configuración</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.loadingText}>Buscando producto...</Text>
-        </View>
-      )}
-
       <Camera
-        onBarCodeScanned={scanned || loading ? undefined : handleBarCodeScanned}
-        style={StyleSheet.absoluteFillObject}
+        ref={setCameraRef}
+        style={styles.camera}
+        type={cameraType} // Usa el estado directamente
+        onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
         barCodeScannerSettings={{
           barCodeTypes: [
             Camera.Constants.BarCodeType.ean13,
             Camera.Constants.BarCodeType.ean8,
-            Camera.Constants.BarCodeType.upc_a,
-            Camera.Constants.BarCodeType.upc_e,
-            Camera.Constants.BarCodeType.code39,
-            Camera.Constants.BarCodeType.code128,
           ],
         }}
-      />
+      >
+        <View style={styles.overlay}>
+          <View style={styles.scanFrame} />
+          <Text style={styles.scanHint}>
+            {mode === "search" ? "ESCANEAR PRODUCTO" : "AGREGAR NUEVO PRODUCTO"}
+          </Text>
+        </View>
 
-      <View style={styles.overlay}>
-        <View style={styles.scanFrame} />
-        <Text style={styles.instructions}>
-          {mode === 'search' 
-            ? 'Escanea el código de barras para buscar un producto' 
-            : 'Escanea el código de barras para asignarlo al producto'}
-        </Text>
-      </View>
+        {loading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#fff" />
+            <Text style={styles.processingText}>Procesando...</Text>
+          </View>
+        )}
+      </Camera>
 
-      {scanned && !loading && (
-        <TouchableOpacity
-          style={styles.scanAgainButton}
-          onPress={() => setScanned(false)}
-        >
-          <Text style={styles.scanAgainText}>Escanear de nuevo</Text>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={toggleCameraType}>
+          <Ionicons name="camera-reverse" size={32} color="white" />
         </TouchableOpacity>
-      )}
+
+        {scanned && (
+          <TouchableOpacity
+            style={styles.scanAgainButton}
+            onPress={() => setScanned(false)}
+          >
+            <Text style={styles.scanAgainText}>Escanear otro</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 };
@@ -139,84 +156,68 @@ const BarcodeScannerScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    position: 'relative',
+    backgroundColor: "black",
   },
-  modalContainer: {
+  camera: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo oscuro semitransparente
+    justifyContent: "flex-end",
+    alignItems: "center",
   },
-  modalContent: {
-    backgroundColor: '#004e92', // Fondo azul
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  modalText: {
-    color: 'white',
-    fontSize: 18,
-    textAlign: 'center',
-  },
-  noPermissionText: {
-    color: 'red',
-    fontSize: 18,
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    zIndex: 100,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
   loadingText: {
-    color: 'white',
-    marginTop: 10,
+    marginTop: 20,
+    fontSize: 16,
+  },
+  permissionDeniedContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  permissionDeniedText: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  settingsButton: {
+    backgroundColor: "#007AFF",
+    padding: 15,
+    borderRadius: 5,
+  },
+  settingsButtonText: {
+    color: "white",
     fontSize: 16,
   },
   overlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
+    justifyContent: "center",
+    alignItems: "center",
   },
   scanFrame: {
     width: 250,
     height: 150,
     borderWidth: 2,
-    borderColor: 'rgba(0, 255, 0, 0.7)',
-    backgroundColor: 'transparent',
-    marginBottom: 20,
-  },
-  instructions: {
-    color: 'white',
-    fontSize: 16,
-    textAlign: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    padding: 10,
-    borderRadius: 5,
-  },
-  scanAgainButton: {
-    position: 'absolute',
-    bottom: 50,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(0, 122, 255, 0.9)',
-    padding: 15,
+    borderColor: "#FF9800",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 10,
   },
-  scanAgainText: {
-    color: 'white',
+  scanHint: {
+    marginTop: 20,
+    color: "white",
     fontSize: 16,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    padding: 10,
+    borderRadius: 5,
   },
 });
 

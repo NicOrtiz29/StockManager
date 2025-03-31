@@ -184,14 +184,24 @@ export const createProveedor = async (proveedor) => {
 };
 
 // Buscar producto por código de barras
+// Mejora la función searchProductByBarcode para manejar mejor los códigos
 export const searchProductByBarcode = async (barcode) => {
   try {
-    // Si el barcode es string vacío, retornar null
-    if (!barcode || barcode.toString().trim() === '') return null;
-    
-    // Convertir a número para la consulta en Firebase
-    const barcodeNumber = Number(barcode);
-    
+    // Validación más robusta del código de barras
+    if (!barcode || typeof barcode !== 'string' && typeof barcode !== 'number') {
+      throw new Error('Código de barras inválido');
+    }
+
+    // Limpiar el código de barras (eliminar espacios, etc.)
+    const cleanedBarcode = barcode.toString().trim();
+    if (!cleanedBarcode) return null;
+
+    // Convertir a número para la consulta
+    const barcodeNumber = Number(cleanedBarcode);
+    if (isNaN(barcodeNumber)) {
+      throw new Error('El código de barras debe ser numérico');
+    }
+
     const q = query(
       collection(db, 'productos'),
       where('codigoBarras', '==', barcodeNumber)
@@ -201,20 +211,19 @@ export const searchProductByBarcode = async (barcode) => {
     
     if (!querySnapshot.empty) {
       const doc = querySnapshot.docs[0];
-      const data = doc.data();
       return {
         id: doc.id,
-        ...data,
-        // Convertir código de barras a string para el frontend
-        codigoBarras: data.codigoBarras?.toString() || ''
+        nombre: doc.data().nombre || 'Sin nombre',
+        precioVenta: doc.data().precioVenta || 0,
+        stock: doc.data().stock || 0,
+        codigoBarras: doc.data().codigoBarras?.toString() || ''
       };
     }
     return null;
   } catch (error) {
     console.error("Error searching product by barcode:", error);
-    throw error;
+    throw new Error('Error al buscar el producto');
   }
-
 };
 
 // Añade estas funciones al final de tu productService.js
