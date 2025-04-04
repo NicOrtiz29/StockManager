@@ -1,92 +1,76 @@
-import { createStackNavigator } from "@react-navigation/stack";
-import { LinearGradient } from "expo-linear-gradient";
-import ProductListScreen from "../screens/ProductListScreen";
-import AddProductScreen from "../screens/AddProductScreen";
-import ProveedorListScreen from "../screens/ProveedorListScreen";
-import FamiliaManagementScreen from "../screens/FamiliaManagementScreen";
-import AddProveedorScreen from "../screens/AddProveedorScreen";
-import BulkPriceUpdateScreen from "../screens/BulkPriceUpdateScreen";
-import EditProveedorScreen from '../screens/EditProveedorScreen';
-import CartScreen from "../screens/CartScreen";
+import React, { useContext } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigation } from "@react-navigation/native";
 
-const Stack = createStackNavigator();
+const HomeScreen = () => {
+  const { user } = useContext(AuthContext);
+  const navigation = useNavigation();
 
-const AppTabs = () => {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerBackground: () => (
-          <LinearGradient
-            colors={["#000428", "#004e92"]}
-            style={{ flex: 1 }}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          />
-        ),
-        headerTintColor: "white",
-        headerTitleAlign: "center",
-        headerTitleStyle: {
-          fontWeight: "bold",
-          fontSize: 18,
-        },
-        cardStyle: {
-          backgroundColor: "transparent",
-        },
-        headerStyle: {
-          height: 80,
-          borderBottomWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-      }}
-    >
-      <Stack.Screen
-        name="ProductList"
-        component={ProductListScreen}
-        options={{ title: "Lista de Productos" }}
-      />
-      <Stack.Screen
-        name="AddProduct"
-        component={AddProductScreen}
-        options={{ title: "Agregar Producto" }}
-      />
-      <Stack.Screen
-        name="EditProduct"
-        component={EditProductScreen}
-        options={{ title: "Editar Producto" }}
-      />
-      <Stack.Screen
-        name="ProveedorList"
-        component={ProveedorListScreen}
-        options={{ title: "Proveedores" }}
-      />
-      <Stack.Screen
-        name="AddProveedor"
-        component={AddProveedorScreen}
-        options={{ title: "Agregar Proveedor" }}
-      />
-      <Stack.Screen
-        name="EditProveedor"
-        component={EditProveedorScreen}
-        options={{ title: "Editar Proveedor" }}
-      />
-      <Stack.Screen
-        name="FamilyList"
-        component={FamiliaManagementScreen}
-        options={{ title: "Familias" }}
-      />
-      <Stack.Screen
-        name="BulkPriceUpdate"
-        component={BulkPriceUpdateScreen}
-        options={{ title: "Aumentos" }}
-      />
-      <Stack.Screen
-        name="CartScreen"
-        component={CartScreen}
-        options={{ title: "Carrito" }}
-      />
-    </Stack.Navigator>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Bienvenido {user?.username}</Text>
+
+      {/* Accesos comunes */}
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("ProductList")}>
+        <Text style={styles.buttonText}>Lista de Productos</Text>
+      </TouchableOpacity>
+
+      {/* Accesos exclusivos para admin */}
+      {user?.role === "admin" && (
+        <>
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("AddProduct")}>
+            <Text style={styles.buttonText}>Agregar Producto</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("ProveedorList")}>
+            <Text style={styles.buttonText}>Proveedores</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("FamilyList")}>
+            <Text style={styles.buttonText}>Familias</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("BulkPriceUpdate")}>
+            <Text style={styles.buttonText}>Aumentos</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("CartScreen")}>
+            <Text style={styles.buttonText}>Carrito</Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </ScrollView>
   );
 };
 
-export default AppTabs;
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    gap: 15,
+    backgroundColor: "#f2f2f2",
+    flexGrow: 1,
+    justifyContent: "center",
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  button: {
+    backgroundColor: "#004e92",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    elevation: 2,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});
+
+export default HomeScreen;

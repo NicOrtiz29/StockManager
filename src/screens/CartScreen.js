@@ -6,14 +6,13 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Alert
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { updateStock } from "../services/productService";
 import { db } from "../config/firebaseConfig";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore"; 
-
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 const CartScreen = ({ route, navigation }) => {
   const { cart, updateCart } = route.params;
@@ -58,37 +57,43 @@ const CartScreen = ({ route, navigation }) => {
 
   const handleCheckout = async () => {
     if (cartItems.length === 0) {
-      Alert.alert("Carrito vacío", "Agrega productos antes de finalizar la compra.");
+      Alert.alert(
+        "Carrito vacío",
+        "Agrega productos antes de finalizar la compra."
+      );
       return;
     }
-  
+
     setLoading(true);
     try {
       // 1️⃣ Actualizar el stock en Firebase
       await Promise.all(
-        cartItems.map(item =>
-          updateStock(item.id, item.quantity)
-        )
+        cartItems.map((item) => updateStock(item.id, item.quantity))
       );
-  
+
       // 2️⃣ Guardar la venta en Firebase
       await addDoc(collection(db, "ventas"), {
         fecha: serverTimestamp(), // Fecha y hora actual en Firebase
         total: calculateTotal(),
-        items: cartItems.map(item => ({
+        items: cartItems.map((item) => ({
           id: item.id,
           nombre: item.nombre,
-          cantidad: item.quantity,  // ✅ Guardamos la cantidad de cada producto
+          cantidad: item.quantity, // ✅ Guardamos la cantidad de cada producto
           precioVenta: item.precioVenta,
-        }))
+        })),
       });
-  
-      Alert.alert("Venta exitosa", `Se realizó la venta correctamente\nTotal: $${calculateTotal().toFixed(2)}`);
-  
+
+      Alert.alert(
+        "Venta exitosa",
+        `Se realizó la venta correctamente\nTotal: $${calculateTotal().toFixed(
+          2
+        )}`
+      );
+
       // 3️⃣ Vaciar el carrito
       setCartItems([]);
       updateCart([]);
-  
+
       // 4️⃣ Volver a la pantalla anterior
       navigation.goBack();
     } catch (error) {
@@ -97,10 +102,17 @@ const CartScreen = ({ route, navigation }) => {
       setLoading(false);
     }
   };
-  
+
   return (
     <LinearGradient colors={["#000428", "#004e92"]} style={styles.fullScreen}>
       <ScrollView contentContainerStyle={styles.container}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+
         <Text style={styles.title}>Tu Carrito de Compras</Text>
 
         {cartItems.length === 0 ? (
@@ -174,6 +186,7 @@ const CartScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   fullScreen: {
     flex: 1,
+    paddingTop: 40,
   },
   container: {
     padding: 20,
@@ -261,6 +274,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
+  backButton: {
+    position: 'absolute',
+    top: 30,
+    left: 20,
+    zIndex: 10,
+    
+  },
+  
 });
 
 export default CartScreen;

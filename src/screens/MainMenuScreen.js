@@ -5,9 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebaseConfig';
 import { AuthContext } from '../context/AuthContext';
-
-
-
+import { updateUserRoleToAdmin } from '../utils/userUtils'; // Asegurate de que la ruta sea correcta
 
 const { width } = Dimensions.get('window');
 const BUTTON_SIZE = width * 0.4; // Tamaño más compacto
@@ -51,7 +49,6 @@ const MainMenuScreen = ({ navigation }) => {
       icon: "person-add",
       action: () => navigation.navigate('AddUser')
     },
-    
     {
       title: "Cerrar sesión",
       icon: "log-out-outline",
@@ -65,7 +62,7 @@ const MainMenuScreen = ({ navigation }) => {
       style={styles.container}
     >
       <Text style={styles.header}>TLN AUTORRADIO</Text>
-      
+
       <View style={styles.grid}>
         {menuItems.map((item, index) => (
           <TouchableOpacity
@@ -86,6 +83,16 @@ const MainMenuScreen = ({ navigation }) => {
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* Botón temporal para convertir el usuario actual en admin 
+      <TouchableOpacity
+        onPress={() => updateUserRoleToAdmin(user.uid)}
+        style={styles.adminButton}
+      >
+        <Text style={styles.adminButtonText}>Convertirme en Admin</Text>
+      </TouchableOpacity>
+      */}
+
     </LinearGradient>
   );
 };
@@ -139,6 +146,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: '90%',
   },
+  adminButton: {
+    marginTop: 30,
+    backgroundColor: 'orange',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  adminButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  }
 });
 
 export default MainMenuScreen;

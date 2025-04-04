@@ -1,26 +1,8 @@
 import React, { useState, useCallback, useEffect } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  TextInput,
-  Modal,
-  StatusBar,
-  BackHandler,
-} from "react-native";
+import {View,Text,FlatList,StyleSheet,TouchableOpacity,Alert,ActivityIndicator,TextInput,Modal,StatusBar,BackHandler,} from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from 'expo-linear-gradient';
-import {
-  getProducts,
-  deleteProduct,
-  searchProductByBarcode,
-  getFamilias,
-  createFamilia
-} from "../services/productService";
+import {getProducts,deleteProduct,searchProductByBarcode,getFamilias,createFamilia} from "../services/productService";
 import { Ionicons } from "@expo/vector-icons";
 
 const ProductListScreen = ({ navigation }) => {
@@ -412,6 +394,7 @@ const ProductListScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   fullScreen: {
     flex: 1,
+    paddingTop:40,
   },
   center: {
     flex: 1,
