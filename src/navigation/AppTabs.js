@@ -1,9 +1,9 @@
 import { createStackNavigator } from "@react-navigation/stack";
+import { LinearGradient } from "expo-linear-gradient";
 import ProductListScreen from "../screens/ProductListScreen";
 import AddProductScreen from "../screens/AddProductScreen";
-import ProveedorListScreen from "../screens/ProveedorListScreen"; // Nombre corregido
-import FamilyListScreen from "../screens/FamilyListScreen";
-import { LinearGradient } from "expo-linear-gradient";
+import ProveedorListScreen from "../screens/ProveedorListScreen";
+import FamiliaManagementScreen from "../screens/FamiliaManagementScreen";
 import AddProveedorScreen from "../screens/AddProveedorScreen";
 import BulkPriceUpdateScreen from "../screens/BulkPriceUpdateScreen";
 import EditProveedorScreen from '../screens/EditProveedorScreen';
@@ -11,11 +11,10 @@ import CartScreen from "../screens/CartScreen";
 
 const Stack = createStackNavigator();
 
-const AppStack = () => {
+const AppTabs = () => {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerMode: "float",
         headerBackground: () => (
           <LinearGradient
             colors={["#000428", "#004e92"]}
@@ -52,6 +51,11 @@ const AppStack = () => {
         options={{ title: "Agregar Producto" }}
       />
       <Stack.Screen
+        name="EditProduct"
+        component={EditProductScreen}
+        options={{ title: "Editar Producto" }}
+      />
+      <Stack.Screen
         name="ProveedorList"
         component={ProveedorListScreen}
         options={{ title: "Proveedores" }}
@@ -68,7 +72,7 @@ const AppStack = () => {
       />
       <Stack.Screen
         name="FamilyList"
-        component={FamilyListScreen}
+        component={FamiliaManagementScreen}
         options={{ title: "Familias" }}
       />
       <Stack.Screen
@@ -85,4 +89,4 @@ const AppStack = () => {
   );
 };
 
-export default AppStack;
+export default AppTabs;

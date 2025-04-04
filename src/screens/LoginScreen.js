@@ -17,6 +17,8 @@ import { login } from '../services/authService';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
+
+
 const { width } = Dimensions.get('window');
 
 const LoginScreen = () => {
@@ -39,11 +41,9 @@ const LoginScreen = () => {
     const { success, user, error: loginError } = await login(email, password);
     
     if (success) {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'MainMenu' }],
-      });
-    } else {
+      // No navegues manualmente. El AuthContext se actualiza, y AppNavigator redirige automáticamente.
+    }
+     else {
       setError(loginError);
     }
     

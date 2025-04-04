@@ -5,6 +5,11 @@ import {
   sendPasswordResetEmail,
   signOut
 } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
+
+
+
 
 const AuthErrorMessages = {
   'auth/invalid-email': 'El formato del email es inválido',
@@ -21,14 +26,22 @@ const getFriendlyErrorMessage = (errorCode) => {
   return AuthErrorMessages[errorCode] || AuthErrorMessages['default'];
 };
 
-export const register = async (email, password) => {
+export const register = async (email, password, role = 'user') => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+    // Guardamos en Firestore el rol del usuario
+    await setDoc(doc(db, 'users', userCredential.user.uid), {
+      email: userCredential.user.email,
+      role: role
+    });
+
     return {
       success: true,
       user: {
         uid: userCredential.user.uid,
-        email: userCredential.user.email
+        email: userCredential.user.email,
+        role: role
       },
       error: null
     };
@@ -42,29 +55,31 @@ export const register = async (email, password) => {
   }
 };
 
+
 export const login = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    
-    if (!userCredential?.user?.uid) {
-      console.error('Datos de usuario incompletos:', userCredential);
-      throw new Error('La respuesta del servidor no contiene datos válidos');
+    const uid = userCredential.user.uid;
+
+    const docRef = doc(db, 'users', uid);
+    const docSnap = await getDoc(docRef);
+
+    let role = 'user'; // valor por defecto
+    if (docSnap.exists()) {
+      role = docSnap.data().role || 'user';
     }
 
     return {
       success: true,
       user: {
-        uid: userCredential.user.uid,
-        email: userCredential.user.email
+        uid,
+        email: userCredential.user.email,
+        role
       },
       error: null
     };
   } catch (error) {
-    console.error("Error en login:", {
-      code: error.code,
-      message: error.message,
-      stack: error.stack
-    });
+    console.error("Error en login:", error);
     return {
       success: false,
       user: null,
@@ -72,6 +87,7 @@ export const login = async (email, password) => {
     };
   }
 };
+
 
 export const resetPassword = async (email) => {
   try {

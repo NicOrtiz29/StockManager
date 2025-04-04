@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useContext } from 'react';
 import { createStackNavigator } from "@react-navigation/stack";
 import { View, StyleSheet, StatusBar, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { AuthContext } from '../context/AuthContext';
 import LoginScreen from "../screens/LoginScreen";
 import AppTabs from "./AppTabs";
 import AddProductScreen from "../screens/AddProductScreen";
@@ -18,361 +19,100 @@ import CartScreen from "../screens/CartScreen";
 import CheckoutScreen from "../screens/CheckoutScreen";
 import HistorialVentasScreen from "../screens/HistorialVentasScreen";
 import DetalleVentaScreen from "../screens/DetalleVentaScreen";
+import AddUserScreen from '../screens/AddUserScreen';
 
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        {/* Aquí puedes poner un spinner o splash screen */}
+      </View>
+    );
+  }
+
+   // 🔹 Agregar console.log para verificar el rol del usuario
+   console.log('Usuario:', user);
+   console.log('Rol del usuario:', user?.role);
+ 
+
   return (
     <>
       <StatusBar translucent backgroundColor="transparent" />
       <Stack.Navigator
-        initialRouteName="Login"
         screenOptions={{
-          headerShown: false, // Ocultamos todos los headers por defecto
-          cardStyle: {
-            backgroundColor: "transparent",
-          },
+          headerShown: false,
+          cardStyle: { backgroundColor: "transparent" },
         }}
       >
-        <Stack.Screen name="Login" component={LoginScreen} />
+        {!user ? (
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen} 
+            options={{ headerShown: false }}
+          />
+        ) : (
+          <>
+            {/* Pantalla principal para usuarios autenticados */}
+            <Stack.Screen name="MainMenu" component={MainMenuScreen} />
 
-        <Stack.Screen name="MainMenu" component={MainMenuScreen} />
+            {/* Pantallas accesibles para todos los usuarios */}
+            <Stack.Screen name="AppTabs" component={AppTabs} />
+            <Stack.Screen name="ProductList" component={ProductListScreen} />
+            <Stack.Screen name="CartScreen" component={CartScreen} />
+            <Stack.Screen name="Checkout" component={CheckoutScreen} />
+            <Stack.Screen name="BarcodeScanner" component={BarcodeScannerScreen} />
 
-        {/* Pantalla de Lista de Productos con header personalizado */}
-        <Stack.Screen
-          name="ProductList"
-          component={ProductListScreen}
-          options={{
-            headerBackTitle: "Menú",
-            headerShown: false, // Asegura que no haya header
-          }}
-        />
+            {/* Pantallas solo para administradores */}
+            {user.role === 'admin' && (
+              <>
+                <Stack.Screen
+                  name="AddProduct"
+                  component={AddProductScreen}
+                  options={{
+                    headerShown: true,
+                    title: "Agregar Producto",
+                    headerBackground: () => (
+                      <LinearGradient
+                        colors={["#000428", "#004e92"]}
+                        style={{ flex: 1 }}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                      />
+                    ),
+                    headerTintColor: "white",
+                    headerTitleAlign: "center",
+                    headerTitleStyle: {
+                      fontWeight: "bold",
+                      fontSize: 18,
+                    },
+                    headerTransparent: true,
+                    headerStyle: {
+                      height: 80,
+                      borderBottomWidth: 0,
+                      elevation: 0,
+                      shadowOpacity: 0,
+                    },
+                  }}
+                />
 
-        <Stack.Screen
-          name="AppTabs"
-          component={AppTabs}
-          options={{ headerShown: false }}
-        />
+                <Stack.Screen name="EditProduct" component={EditProductScreen} />
+                <Stack.Screen name="ProveedorList" component={ProveedorListScreen} />
+                <Stack.Screen name="AddProveedor" component={AddProveedorScreen} />
+                <Stack.Screen name="EditProveedor" component={EditProveedorScreen} />
+                <Stack.Screen name="FamilyList" component={FamiliaManagementScreen} />
+                <Stack.Screen name="BulkPriceUpdate" component={BulkPriceUpdateScreen} />
+                <Stack.Screen name="HistorialVentas" component={HistorialVentasScreen} />
+                <Stack.Screen name="DetalleVenta" component={DetalleVentaScreen} />
+                <Stack.Screen name="AddUser" component={AddUserScreen} options={{ title: 'Crear Usuario' }} />
 
-        <Stack.Screen
-          name="AddProduct"
-          component={AddProductScreen}
-          options={{
-            headerShown: true,
-            title: "Agregar Producto",
-            headerBackground: () => (
-              <LinearGradient
-                colors={["#000428", "#004e92"]}
-                style={{ flex: 1 }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
-            ),
-            headerTintColor: "white",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 18,
-            },
-            headerTransparent: true,
-            headerStyle: {
-              height: 80, // Igual que el de "Lista de Productos"
-              borderBottomWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-            },
-          }}
-        />
-
-        <Stack.Screen
-          name="EditProduct"
-          component={EditProductScreen}
-          options={{
-            headerShown: true,
-            title: "Editar producto",
-            headerBackground: () => (
-              <LinearGradient
-                colors={["#000428", "#004e92"]}
-                style={{ flex: 1 }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
-            ),
-            headerTintColor: "white",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 18,
-            },
-            headerTransparent: true,
-            headerStyle: {
-              height: 80, // Igual que el de "Lista de Productos"
-              borderBottomWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-            },
-          }}
-        />
-
-        <Stack.Screen
-          name="ProveedorList"
-          component={ProveedorListScreen}
-          options={{
-            headerShown: true,
-            title: "Proveedores",
-            headerBackground: () => (
-              <LinearGradient
-                colors={["#000428", "#004e92"]}
-                style={{ flex: 1 }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
-            ),
-            headerTintColor: "white",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 18,
-            },
-            headerTransparent: true,
-            headerStyle: {
-              height: 80, // Igual que el de "Lista de Productos"
-              borderBottomWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-            },
-          }}
-        />
-
-        <Stack.Screen
-          name="AddProveedor"
-          component={AddProveedorScreen}
-          options={{
-            headerShown: true,
-            title: "Agregar Proveedor",
-            headerBackground: () => (
-              <LinearGradient
-                colors={["#000428", "#004e92"]}
-                style={{ flex: 1 }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
-            ),
-            headerTintColor: "white",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 18,
-            },
-            headerTransparent: true,
-            headerStyle: {
-              height: 80, // Igual que el de "Lista de Productos"
-              borderBottomWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-            },
-          }}
-        />
-
-        <Stack.Screen
-          name="EditProveedor"
-          component={EditProveedorScreen}
-          options={{
-            headerShown: true,
-            title: "Editar Proveedor",
-            headerBackground: () => (
-              <LinearGradient
-                colors={["#000428", "#004e92"]}
-                style={{ flex: 1 }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
-            ),
-            headerTintColor: "white",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 18,
-            },
-            headerTransparent: true,
-            headerStyle: {
-              height: 80,
-              borderBottomWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-            },
-          }}
-        />
-
-        <Stack.Screen
-          name="FamilyList"
-          component={FamiliaManagementScreen}
-          options={{
-            headerShown: true,
-            title: "Gestion de Familias",
-            headerBackground: () => (
-              <LinearGradient
-                colors={["#000428", "#004e92"]}
-                style={{ flex: 1 }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
-            ),
-            headerTintColor: "white",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 18,
-            },
-            headerTransparent: true,
-            headerStyle: {
-              height: 80, // Igual que el de "Lista de Productos"
-              borderBottomWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-            },
-          }}
-        />
-
-        <Stack.Screen
-          name="BarcodeScanner"
-          component={BarcodeScannerScreen}
-          options={{
-            headerShown: true,
-            title: "Escanear Código",
-            headerTransparent: true,
-            headerTitleStyle: {
-              color: "white",
-            },
-          }}
-        />
-
-        <Stack.Screen
-          name="BulkPriceUpdate"
-          component={BulkPriceUpdateScreen}
-          options={{
-            headerShown: true,
-            title: "Aumento Masivo",
-            headerBackground: () => (
-              <LinearGradient
-                colors={["#000428", "#004e92"]}
-                style={{ flex: 1 }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
-            ),
-            headerTintColor: "white",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 18,
-            },
-            headerTransparent: true,
-            headerStyle: {
-              height: 80,
-              borderBottomWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-            },
-          }}
-        />
-        <Stack.Screen
-          name="CartScreen"
-          component={CartScreen}
-          options={{
-            title: "Tu Carrito",
-            headerBackTitle: "Menú",
-          }}
-        />
-        <Stack.Screen
-          name="Checkout"
-          component={CheckoutScreen}
-          options={{
-            headerShown: true,
-            title: "Finalizar Compra",
-            headerBackground: () => (
-              <LinearGradient
-                colors={["#000428", "#004e92"]}
-                style={{ flex: 1 }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
-            ),
-            headerTintColor: "white",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 18,
-            },
-            headerTransparent: true,
-            headerStyle: {
-              height: 80,
-              borderBottomWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-            },
-          }}
-        />
-
-        <Stack.Screen
-          name="HistorialVentas"
-          component={HistorialVentasScreen}
-          options={{
-            headerShown: true,
-            title: "Historial de Ventas",
-            headerBackground: () => (
-              <LinearGradient
-                colors={["#000428", "#004e92"]}
-                style={{ flex: 1 }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
-            ),
-            headerTintColor: "white",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 18,
-            },
-            headerTransparent: true,
-            headerStyle: {
-              height: 80,
-              borderBottomWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-            },
-          }}
-        />
-
-        <Stack.Screen
-          name="DetalleVenta"
-          component={DetalleVentaScreen}
-          options={{
-            headerShown: true,
-            title: "Detalle de Venta",
-            headerBackground: () => (
-              <LinearGradient
-                colors={["#000428", "#004e92"]}
-                style={{ flex: 1 }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
-            ),
-            headerTintColor: "white",
-            headerTitleAlign: "center",
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 18,
-            },
-            headerTransparent: true,
-            headerStyle: {
-              height: 80, // Igual que el de "Lista de Productos"
-              borderBottomWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-            },
-          }}
-        />
+              </>
+            )}
+          </>
+        )}
       </Stack.Navigator>
     </>
   );

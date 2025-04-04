@@ -1,12 +1,20 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { signOut } from 'firebase/auth';
+import { auth } from '../config/firebaseConfig';
+import { AuthContext } from '../context/AuthContext';
+
+
+
 
 const { width } = Dimensions.get('window');
 const BUTTON_SIZE = width * 0.4; // Tamaño más compacto
 
 const MainMenuScreen = ({ navigation }) => {
+  const { user } = useContext(AuthContext);
+
   const menuItems = [
     {
       title: "Productos",
@@ -23,7 +31,6 @@ const MainMenuScreen = ({ navigation }) => {
       icon: "people",
       action: () => navigation.navigate('ProveedorList')
     },
-    
     {
       title: "Familias",
       icon: "layers",
@@ -39,8 +46,17 @@ const MainMenuScreen = ({ navigation }) => {
       icon: "receipt",
       action: () => navigation.navigate('HistorialVentas')
     },
-
-
+    {
+      title: "Crear Usuario",
+      icon: "person-add",
+      action: () => navigation.navigate('AddUser')
+    },
+    
+    {
+      title: "Cerrar sesión",
+      icon: "log-out-outline",
+      action: () => signOut(auth)
+    }
   ];
 
   return (
@@ -101,7 +117,6 @@ const styles = StyleSheet.create({
     height: BUTTON_SIZE,
     margin: 10,
     borderRadius: 15,
-    // Sombra
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -121,8 +136,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontWeight: '500',
     fontSize: 14,
-    textAlign: 'center',// Centra el texto si es más largo
-    width: '90%', // evita que el texto sobresalga
+    textAlign: 'center',
+    width: '90%',
   },
 });
 
