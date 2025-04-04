@@ -23,20 +23,31 @@ const HistorialVentasScreen = ({ navigation }) => {
       setError(null);
       const historial = await obtenerHistorialVentas();
 
-      // Asegurarnos que cada venta tenga un array items
-      const ventasFormateadas = historial.map((venta) => ({
-        ...venta,
-        items: venta.items || [], // Si items es undefined, usar array vacío
-        fecha: venta.fecha?.seconds
-          ? new Date(venta.fecha.seconds * 1000) // Si es Timestamp de Firebase
-          : new Date(venta.fecha) || new Date(), // Si ya es una fecha o undefined
-      }));
+      // Formatear las ventas para asegurar que items es un array
+      const ventasFormateadas = historial.map((venta) => {
+        const items = Array.isArray(venta.items) ? venta.items : [];
+
+        // Calcular la cantidad total de productos vendidos en esta venta
+        const cantidadTotalProductos = items.reduce(
+          (total, item) => total + (item.cantidad || 0),
+          0
+        );
+
+        return {
+          ...venta,
+          items,
+          cantidadTotalProductos, // Agregar esta propiedad calculada
+          fecha: venta.fecha?.seconds
+            ? new Date(venta.fecha.seconds * 1000)
+            : new Date(venta.fecha) || new Date(),
+        };
+      });
 
       setVentas(ventasFormateadas);
     } catch (err) {
       console.error("Error al cargar historial:", err);
       setError("Error al cargar el historial");
-      setVentas([]); // Asegurar que ventas sea un array
+      setVentas([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -70,7 +81,8 @@ const HistorialVentasScreen = ({ navigation }) => {
         Total: ${item.total?.toFixed(2) || "0.00"}
       </Text>
       <Text style={styles.itemsCount}>
-        {item.items?.length || 0} producto{item.items?.length !== 1 ? "s" : ""}
+        {item.cantidadTotalProductos} producto
+        {item.cantidadTotalProductos !== 1 ? "s" : ""}
       </Text>
     </TouchableOpacity>
   );

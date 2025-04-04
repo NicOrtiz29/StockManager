@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ScrollView, 
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
   ActivityIndicator,
   Alert
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { updateStock } from '../services/productService';
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { updateStock } from "../services/productService";
+import { db } from "../config/firebaseConfig";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore"; 
+
 
 const CartScreen = ({ route, navigation }) => {
   const { cart, updateCart } = route.params;
@@ -18,27 +21,28 @@ const CartScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const updateQuantity = (productId, change) => {
-    setCartItems(prevCart => {
-      const existingItem = prevCart.find(item => item.id === productId);
+    setCartItems((prevCart) => {
+      const existingItem = prevCart.find((item) => item.id === productId);
       if (!existingItem) return prevCart;
-      
+
       const newQuantity = existingItem.quantity + change;
-      
+
       if (newQuantity > existingItem.stock) {
-        Alert.alert('Stock insuficiente', `Solo hay ${existingItem.stock} unidades disponibles`);
+        Alert.alert(
+          "Stock insuficiente",
+          `Solo hay ${existingItem.stock} unidades disponibles`
+        );
         return prevCart;
       }
-      
+
       if (newQuantity <= 0) {
-        const newCart = prevCart.filter(item => item.id !== productId);
+        const newCart = prevCart.filter((item) => item.id !== productId);
         updateCart(newCart); // Actualizar el carrito en la pantalla anterior
         return newCart;
       }
-      
-      const newCart = prevCart.map(item =>
-        item.id === productId 
-          ? { ...item, quantity: newQuantity } 
-          : item
+
+      const newCart = prevCart.map((item) =>
+        item.id === productId ? { ...item, quantity: newQuantity } : item
       );
       updateCart(newCart); // Actualizar el carrito en la pantalla anterior
       return newCart;
@@ -47,42 +51,58 @@ const CartScreen = ({ route, navigation }) => {
 
   const calculateTotal = () => {
     return cartItems.reduce(
-      (total, item) => total + (item.precioVenta * item.quantity), 0
+      (total, item) => total + item.precioVenta * item.quantity,
+      0
     );
   };
 
   const handleCheckout = async () => {
+    if (cartItems.length === 0) {
+      Alert.alert("Carrito vacío", "Agrega productos antes de finalizar la compra.");
+      return;
+    }
+  
     setLoading(true);
     try {
+      // 1️⃣ Actualizar el stock en Firebase
       await Promise.all(
-        cartItems.map(item => 
+        cartItems.map(item =>
           updateStock(item.id, item.quantity)
         )
       );
-      
-      Alert.alert(
-        'Compra exitosa', 
-        `Se realizó la venta correctamente\nTotal: $${calculateTotal().toFixed(2)}`
-      );
-      
-      // Vaciar ambos carritos
+  
+      // 2️⃣ Guardar la venta en Firebase
+      await addDoc(collection(db, "ventas"), {
+        fecha: serverTimestamp(), // Fecha y hora actual en Firebase
+        total: calculateTotal(),
+        items: cartItems.map(item => ({
+          id: item.id,
+          nombre: item.nombre,
+          cantidad: item.quantity,  // ✅ Guardamos la cantidad de cada producto
+          precioVenta: item.precioVenta,
+        }))
+      });
+  
+      Alert.alert("Venta exitosa", `Se realizó la venta correctamente\nTotal: $${calculateTotal().toFixed(2)}`);
+  
+      // 3️⃣ Vaciar el carrito
       setCartItems([]);
       updateCart([]);
-      
-      // Volver a la pantalla anterior
+  
+      // 4️⃣ Volver a la pantalla anterior
       navigation.goBack();
     } catch (error) {
-      Alert.alert('Error', error.message || 'No se pudo completar la compra');
+      Alert.alert("Error", error.message || "No se pudo completar la venta");
     } finally {
       setLoading(false);
     }
   };
-
+  
   return (
-    <LinearGradient colors={['#000428', '#004e92']} style={styles.fullScreen}>
+    <LinearGradient colors={["#000428", "#004e92"]} style={styles.fullScreen}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Tu Carrito de Compras</Text>
-        
+
         {cartItems.length === 0 ? (
           <Text style={styles.emptyText}>El carrito está vacío</Text>
         ) : (
@@ -90,46 +110,50 @@ const CartScreen = ({ route, navigation }) => {
             <View key={index} style={styles.cartItem}>
               <View style={styles.itemInfo}>
                 <Text style={styles.itemName}>{item.nombre}</Text>
-                <Text style={styles.itemPrice}>${item.precioVenta.toFixed(2)} c/u</Text>
+                <Text style={styles.itemPrice}>
+                  ${item.precioVenta.toFixed(2)} c/u
+                </Text>
               </View>
-              
+
               <View style={styles.quantityRow}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => updateQuantity(item.id, -1)}
                   style={styles.quantityButton}
                 >
                   <Ionicons name="remove" size={18} color="#FF9800" />
                 </TouchableOpacity>
-                
+
                 <Text style={styles.quantity}>{item.quantity}</Text>
-                
-                <TouchableOpacity 
+
+                <TouchableOpacity
                   onPress={() => updateQuantity(item.id, 1)}
                   style={styles.quantityButton}
                   disabled={item.quantity >= item.stock}
                 >
-                  <Ionicons 
-                    name="add" 
-                    size={18} 
-                    color={item.quantity < item.stock ? "#FF9800" : "#ccc"} 
+                  <Ionicons
+                    name="add"
+                    size={18}
+                    color={item.quantity < item.stock ? "#FF9800" : "#ccc"}
                   />
                 </TouchableOpacity>
               </View>
-              
+
               <Text style={styles.itemTotal}>
                 ${(item.precioVenta * item.quantity).toFixed(2)}
               </Text>
             </View>
           ))
         )}
-        
+
         {cartItems.length > 0 && (
           <>
             <View style={styles.totalContainer}>
-              <Text style={styles.totalText}>Total: ${calculateTotal().toFixed(2)}</Text>
+              <Text style={styles.totalText}>
+                Total: ${calculateTotal().toFixed(2)}
+              </Text>
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.checkoutButton}
               onPress={handleCheckout}
               disabled={loading}
@@ -157,84 +181,84 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptyText: {
-    textAlign: 'center',
-    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: "center",
+    color: "rgba(255, 255, 255, 0.7)",
     fontSize: 18,
     marginTop: 50,
   },
   cartItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 8,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
   itemInfo: {
     flex: 1,
   },
   itemName: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   itemPrice: {
-    color: 'white',
+    color: "white",
     fontSize: 14,
     opacity: 0.8,
   },
   quantityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginHorizontal: 10,
   },
   quantityButton: {
     padding: 5,
   },
   quantity: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
     marginHorizontal: 10,
     minWidth: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   itemTotal: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginLeft: 10,
   },
   totalContainer: {
     marginTop: 20,
     paddingTop: 15,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.3)',
+    borderTopColor: "rgba(255, 255, 255, 0.3)",
   },
   totalText: {
-    color: 'white',
+    color: "white",
     fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'right',
+    fontWeight: "bold",
+    textAlign: "right",
   },
   checkoutButton: {
-    backgroundColor: '#FF9800',
+    backgroundColor: "#FF9800",
     padding: 15,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
   },
   checkoutText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
     fontSize: 16,
   },
 });
