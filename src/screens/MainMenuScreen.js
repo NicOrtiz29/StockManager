@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
-const BUTTON_SIZE = width * 0.4; // Tamaño más compacto
+const BUTTON_SIZE = width * 0.3;
 
 const MainMenuScreen = ({ navigation }) => {
   const menuItems = [
@@ -14,7 +14,7 @@ const MainMenuScreen = ({ navigation }) => {
       action: () => navigation.navigate('AppTabs')
     },
     {
-      title: "Agregar Productos",
+      title: "Agregar Producto",
       icon: "add-circle",
       action: () => navigation.navigate('AddProduct')
     },
@@ -23,7 +23,6 @@ const MainMenuScreen = ({ navigation }) => {
       icon: "people",
       action: () => navigation.navigate('ProveedorList')
     },
-    
     {
       title: "Familias",
       icon: "layers",
@@ -39,8 +38,11 @@ const MainMenuScreen = ({ navigation }) => {
       icon: "receipt",
       action: () => navigation.navigate('HistorialVentas')
     },
-
-
+    {
+      title: "Agregar Usuario",
+      icon: "person-add",
+      action: () => navigation.navigate('AddUserScreen')
+    },
   ];
 
   return (
@@ -101,7 +103,6 @@ const styles = StyleSheet.create({
     height: BUTTON_SIZE,
     margin: 10,
     borderRadius: 15,
-    // Sombra
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -121,8 +122,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontWeight: '500',
     fontSize: 14,
-    textAlign: 'center',// Centra el texto si es más largo
-    width: '90%', // evita que el texto sobresalga
+    textAlign: 'center',
+    width: '90%',
   },
 });
 
