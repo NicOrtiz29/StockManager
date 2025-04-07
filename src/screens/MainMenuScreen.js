@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -7,6 +7,23 @@ const { width } = Dimensions.get('window');
 const BUTTON_SIZE = width * 0.3;
 
 const MainMenuScreen = ({ navigation }) => {
+  const handleLogout = () => {
+    Alert.alert(
+      "Cerrar Sesión",
+      "¿Estás seguro que deseas cerrar sesión?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel"
+        },
+        { 
+          text: "Cerrar Sesión", 
+          onPress: () => navigation.replace('Login') 
+        }
+      ]
+    );
+  };
+
   const menuItems = [
     {
       title: "Productos",
@@ -43,6 +60,11 @@ const MainMenuScreen = ({ navigation }) => {
       icon: "person-add",
       action: () => navigation.navigate('AddUserScreen')
     },
+    {
+      title: "Cerrar Sesión",
+      icon: "log-out",
+      action: handleLogout
+    },
   ];
 
   return (
@@ -76,6 +98,7 @@ const MainMenuScreen = ({ navigation }) => {
   );
 };
 
+// Mantén los mismos estilos que ya tenías
 const styles = StyleSheet.create({
   container: {
     flex: 1,
