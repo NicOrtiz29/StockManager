@@ -1,26 +1,67 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, collection, addDoc } from 'firebase/firestore';
+import { auth, db } from '../config/firebaseConfig';
 
 const AddUserScreen = () => {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleAgregarUsuario = () => {
+  const handleAgregarUsuario = async () => {
     if (!nombre || !email || !password) {
       Alert.alert('Error', 'Por favor completá todos los campos.');
       return;
     }
 
-    // Lógica para guardar el usuario
-    console.log('Nuevo usuario:', { nombre, email, password });
+    if (password.length < 6) {
+      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
 
-    Alert.alert('Éxito', `Usuario ${nombre} agregado correctamente.`);
-    
-    // Limpiar campos
-    setNombre('');
-    setEmail('');
-    setPassword('');
+    setLoading(true);
+
+    try {
+      // 1. Crear usuario en Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // 2. Guardar información adicional en Firestore
+      await addDoc(collection(db, 'usuarios'), {
+        uid: userCredential.user.uid,
+        nombre,
+        email,
+        rol: 'usuario', // Puedes definir roles si necesitas
+        fechaCreacion: new Date(),
+      });
+
+      Alert.alert('Éxito', `Usuario ${nombre} agregado correctamente.`);
+      
+      // Limpiar campos
+      setNombre('');
+      setEmail('');
+      setPassword('');
+    } catch (error) {
+      console.error('Error al agregar usuario:', error);
+      
+      let errorMessage = 'Ocurrió un error al registrar el usuario.';
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'El email ya está en uso por otro usuario.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'El email no tiene un formato válido.';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'La contraseña es demasiado débil.';
+          break;
+      }
+      
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -28,11 +69,11 @@ const AddUserScreen = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-     
+      <Text style={styles.title}>Agregar Nuevo Usuario</Text>
 
       <TextInput
         style={styles.input}
-        placeholder="Nombre"
+        placeholder="Nombre completo"
         placeholderTextColor="#aaa"
         value={nombre}
         onChangeText={setNombre}
@@ -50,15 +91,21 @@ const AddUserScreen = () => {
 
       <TextInput
         style={styles.input}
-        placeholder="Contraseña"
+        placeholder="Contraseña (mínimo 6 caracteres)"
         placeholderTextColor="#aaa"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleAgregarUsuario}>
-        <Text style={styles.buttonText}>Agregar Usuario</Text>
+      <TouchableOpacity 
+        style={[styles.button, loading && styles.buttonDisabled]} 
+        onPress={handleAgregarUsuario}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? 'Registrando...' : 'Agregar Usuario'}
+        </Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );
@@ -93,6 +140,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 10,
+  },
+  buttonDisabled: {
+    backgroundColor: '#004e9280',
   },
   buttonText: {
     color: 'white',
