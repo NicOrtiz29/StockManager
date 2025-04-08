@@ -22,6 +22,7 @@ import {
 } from "../services/productService";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRoute } from "@react-navigation/native";
 
 const AddProductScreen = ({ navigation, route }) => {
   const [nombre, setNombre] = useState("");
@@ -263,7 +264,9 @@ const AddProductScreen = ({ navigation, route }) => {
             />
             <TouchableOpacity
               onPress={() =>
-                navigation.navigate("BarcodeScanner", { mode: "search" })
+                navigation.navigate("BarcodeScanner", {
+                  onBarcodeScanned: (barcode) => setCodigoBarras(barcode),
+                })
               }
               style={styles.scanButton}
             >
@@ -300,7 +303,7 @@ const AddProductScreen = ({ navigation, route }) => {
               onValueChange={setFamiliaId}
               style={styles.picker}
               dropdownIconColor="white"
-              enabled={true} 
+              enabled={true}
             >
               <Picker.Item
                 label="Selecciona una familia (opcional)"
