@@ -265,7 +265,9 @@ const AddProductScreen = ({ navigation, route }) => {
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate("BarcodeScanner", {
-                  onBarcodeScanned: (barcode) => setCodigoBarras(barcode),
+                  onBarcodeScanned: (barcode) => {
+                    setCodigoBarras(barcode); // Actualiza el estado
+                  },
                 })
               }
               style={styles.scanButton}

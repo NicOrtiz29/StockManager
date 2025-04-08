@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator,Alert } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
@@ -23,35 +23,15 @@ export default function BarcodeScannerScreen({ navigation, route }) {
     
     try {
       if (onBarcodeScanned) {
-        // Si viene la función callback, simplemente devolvemos el código
+        // Primero actualizamos el código
         onBarcodeScanned(data);
+        // Esperamos un breve momento antes de navegar
+        await new Promise(resolve => setTimeout(resolve, 300));
         navigation.goBack();
         return;
       }
-
-      // Código original para búsqueda de productos
-      const q = query(collection(db, 'productos'), where('codigoBarra', '==', data));
-      const snapshot = await getDocs(q);
-
-      if (!snapshot.empty) {
-        const product = snapshot.docs[0].data();
-        Alert.alert(
-          'Producto encontrado',
-          `Nombre: ${product.nombre}\nPrecio: $${product.precio}`
-        );
-      } else {
-        Alert.alert(
-          'No encontrado',
-          `¿Deseas agregar el producto con código ${data}?`,
-          [
-            { text: 'Cancelar', onPress: () => {} },
-            { 
-              text: 'Agregar', 
-              onPress: () => navigation.navigate('AddProduct', { codigoBarras: data }) 
-            }
-          ]
-        );
-      }
+  
+      // Resto del código para búsqueda...
     } catch (error) {
       Alert.alert('Error', 'Error al procesar el código');
       console.error(error);
