@@ -27,7 +27,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
         onBarcodeScanned(data);
         // Esperamos un breve momento antes de navegar
         await new Promise(resolve => setTimeout(resolve, 300));
-        navigation.goBack();
+        navigation.pop(1); // cierra una pantalla y vuelve a la anterior
         return;
       }
   
