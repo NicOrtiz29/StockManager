@@ -1,224 +1,101 @@
-import React, { useState, useEffect } from "react";
-import {
-  Text,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  Linking,
-} from "react-native";
-// En versiones recientes, CameraType se importa por separado
-import { CameraType } from 'expo-camera';
-import { searchProductByBarcode } from "../services/productService";
-import { Ionicons } from "@expo/vector-icons";
+// BarcodeScannerScreen.js - Versión final optimizada
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, Button, Alert, ActivityIndicator } from 'react-native';
+import { BarCodeScanner } from 'expo-barcode-scanner';
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
 
-const BarcodeScannerScreen = ({ navigation, route }) => {
-  const { mode = "search" } = route.params || {};
+export default function BarcodeScannerScreen({ navigation }) {
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [cameraRef, setCameraRef] = useState(null);
-  const [cameraType, setCameraType] = useState(CameraType.back);
-  
-  useEffect(() => {
-    const requestPermissions = async () => {
-      try {
-        const { status } = await Camera.requestCameraPermissionsAsync();
-        setHasPermission(status === "granted");
 
-        if (status !== "granted") {
+  // Solicitar permisos
+  useEffect(() => {
+    (async () => {
+      const { status } = await BarCodeScanner.requestPermissionsAsync();
+      setHasPermission(status === 'granted');
+    })();
+  }, []);
+
+  // Manejo del escaneo
+  const handleBarCodeScanned = async ({ data }) => {
+    if (!scanned) {
+      setScanned(true);
+      setLoading(true);
+      
+      try {
+        // 1. Buscar producto en Firestore
+        const q = query(collection(db, 'productos'), where('codigoBarra', '==', data));
+        const snapshot = await getDocs(q);
+
+        if (!snapshot.empty) {
+          const product = snapshot.docs[0].data();
           Alert.alert(
-            "Permiso requerido",
-            "Necesitamos acceso a tu cámara para escanear códigos",
+            'Producto encontrado',
+            `Nombre: ${product.nombre}\nPrecio: $${product.precio}`
+          );
+        } else {
+          Alert.alert(
+            'No encontrado',
+            `¿Deseas agregar el producto con código ${data}?`,
             [
-              {
-                text: "Abrir configuración",
-                onPress: () => Linking.openSettings(),
-              },
-              {
-                text: "Cancelar",
-                style: "cancel",
-                onPress: () => navigation.goBack(),
-              },
+              { text: 'Cancelar', onPress: () => setScanned(false) },
+              { text: 'Agregar', onPress: () => navigation.navigate('AddProduct', { barcode: data }) }
             ]
           );
         }
       } catch (error) {
-        console.error("Error al solicitar permisos:", error);
-        setHasPermission(false);
+        Alert.alert('Error', 'Error al buscar el producto');
+        console.error(error);
+      } finally {
+        setLoading(false);
       }
-    };
-
-    requestPermissions();
-  }, []);
-
-  const handleBarCodeScanned = async ({ type, data }) => {
-    if (scanned || loading) return;
-
-    setScanned(true);
-    setLoading(true);
-
-    try {
-      console.log(`Código escaneado: ${data} (Tipo: ${type})`);
-
-      if (mode === "search") {
-        await handleSearchProduct(data);
-      } else {
-        handleAddProduct(data);
-      }
-    } catch (error) {
-      console.error("Error en escaneo:", error);
-      Alert.alert("Error", "Ocurrió un problema al procesar el código");
-    } finally {
-      setLoading(false);
     }
   };
 
-  const toggleCameraType = () => {
-    setCameraType((prevType) =>
-      prevType === CameraType.back ? CameraType.front : CameraType.back
-    );
-  };
-
-  if (hasPermission === null) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>Solicitando permisos...</Text>
-      </View>
-    );
-  }
-
-  if (hasPermission === false) {
-    return (
-      <View style={styles.permissionDeniedContainer}>
-        <Text style={styles.permissionDeniedText}>
-          No se otorgaron permisos para usar la cámara
-        </Text>
-        <TouchableOpacity
-          style={styles.settingsButton}
-          onPress={() => Linking.openSettings()}
-        >
-          <Text style={styles.settingsButtonText}>Abrir configuración</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  // Estados de permisos
+  if (hasPermission === null) return <Text>Solicitando permisos...</Text>;
+  if (hasPermission === false) return <Text>Sin acceso a la cámara</Text>;
 
   return (
     <View style={styles.container}>
-      <Camera
-        ref={setCameraRef}
-        style={styles.camera}
-        type={cameraType} // Usa el estado directamente
+      <BarCodeScanner
         onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-        barCodeScannerSettings={{
-          barCodeTypes: [
-            Camera.Constants.BarCodeType.ean13,
-            Camera.Constants.BarCodeType.ean8,
-          ],
-        }}
-      >
-        <View style={styles.overlay}>
-          <View style={styles.scanFrame} />
-          <Text style={styles.scanHint}>
-            {mode === "search" ? "ESCANEAR PRODUCTO" : "AGREGAR NUEVO PRODUCTO"}
-          </Text>
+        style={StyleSheet.absoluteFillObject}
+        barCodeTypes={[BarCodeScanner.Constants.BarCodeType.ean13, BarCodeScanner.Constants.BarCodeType.ean8]}
+      />
+
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#0000ff" />
         </View>
+      )}
 
-        {loading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#fff" />
-            <Text style={styles.processingText}>Procesando...</Text>
-          </View>
-        )}
-      </Camera>
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={toggleCameraType}>
-          <Ionicons name="camera-reverse" size={32} color="white" />
-        </TouchableOpacity>
-
-        {scanned && (
-          <TouchableOpacity
-            style={styles.scanAgainButton}
-            onPress={() => setScanned(false)}
-          >
-            <Text style={styles.scanAgainText}>Escanear otro</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      {scanned && (
+        <Button 
+          title="Escanear de nuevo" 
+          onPress={() => setScanned(false)} 
+          style={styles.button}
+        />
+      )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "black",
+    flexDirection: 'column',
+    justifyContent: 'flex-end',
   },
-  camera: {
-    flex: 1,
-    justifyContent: "flex-end",
-    alignItems: "center",
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-  loadingText: {
-    marginTop: 20,
-    fontSize: 16,
-  },
-  permissionDeniedContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#fff",
-  },
-  permissionDeniedText: {
-    fontSize: 18,
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  settingsButton: {
-    backgroundColor: "#007AFF",
-    padding: 15,
-    borderRadius: 5,
-  },
-  settingsButtonText: {
-    color: "white",
-    fontSize: 16,
-  },
-  overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  scanFrame: {
-    width: 250,
-    height: 150,
-    borderWidth: 2,
-    borderColor: "#FF9800",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    borderRadius: 10,
-  },
-  scanHint: {
-    marginTop: 20,
-    color: "white",
-    fontSize: 16,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    padding: 10,
-    borderRadius: 5,
-  },
+  button: {
+    margin: 20,
+  }
 });
-
-export default BarcodeScannerScreen;

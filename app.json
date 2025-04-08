@@ -18,16 +18,9 @@
         {
           "cameraPermission": "Necesitamos acceso a tu cámara para escanear códigos de barras"
         }
-      ]
+      ],
+      "expo-barcode-scanner"
     ],
-    "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSCameraUsageDescription": "Necesitamos acceso a tu cámara para escanear códigos de barras",
-        "NSPhotoLibraryUsageDescription": "Permite a la aplicación acceder a tus fotos para subir imágenes de productos"
-      },
-      "bundleIdentifier": "com.tudominio.stockmanager"
-    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -40,16 +33,25 @@
       ],
       "package": "com.tudominio.stockmanager"
     },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tudominio.stockmanager",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Necesitamos acceso a tu cámara para escanear códigos de barras",
+        "NSPhotoLibraryUsageDescription": "Permite a la aplicación acceder a tus fotos para subir imágenes de productos"
+      }
+    },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "tu-project-id"
+        "projectId": "a8f2a3b8-8eb3-416f-bc23-ad0fcdc6a526"
       }
     },
     "runtimeVersion": {
       "policy": "sdkVersion"
-    }
+    },
+    "owner": "nicoexpo2025"
   }
 }
