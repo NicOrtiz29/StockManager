@@ -4,7 +4,7 @@
     "slug": "stock-manager",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/favicon.png",
+    "icon": "./assets/iconoaplicacion.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
