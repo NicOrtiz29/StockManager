@@ -13,13 +13,13 @@ import {
   BackHandler,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
 import {
   getProducts,
   deleteProduct,
   searchProductByBarcode,
   getFamilias,
-  createFamilia
+  createFamilia,
 } from "../services/productService";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -76,27 +76,27 @@ const ProductListScreen = ({ navigation }) => {
     const onBackPress = () => {
       if (cart.length > 0) {
         Alert.alert(
-          'Carrito no vacío',
-          '¿Seguro que quieres salir? Perderás los items del carrito',
+          "Carrito no vacío",
+          "¿Seguro que quieres salir? Perderás los items del carrito",
           [
-            { text: 'Cancelar', style: 'cancel' },
-            { 
-              text: 'Salir', 
-              onPress: () => navigation.navigate('MainMenu') 
-            }
+            { text: "Cancelar", style: "cancel" },
+            {
+              text: "Salir",
+              onPress: () => navigation.navigate("MainMenu"),
+            },
           ]
         );
         return true;
       }
-      navigation.navigate('MainMenu');
+      navigation.navigate("MainMenu");
       return true;
     };
-  
+
     const subscription = BackHandler.addEventListener(
-      'hardwareBackPress',
+      "hardwareBackPress",
       onBackPress
     );
-  
+
     return () => subscription.remove();
   }, [navigation, cart.length]);
 
@@ -166,32 +166,32 @@ const ProductListScreen = ({ navigation }) => {
   };
 
   const handleCartAction = (product, action) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === product.id);
-      
-      if (action === 'add') {
+    setCart((prevCart) => {
+      const existingItem = prevCart.find((item) => item.id === product.id);
+
+      if (action === "add") {
         if (existingItem && existingItem.quantity >= product.stock) {
-          Alert.alert('Error', 'No hay suficiente stock disponible');
+          Alert.alert("Error", "No hay suficiente stock disponible");
           return prevCart;
         }
-        
+
         if (existingItem) {
-          return prevCart.map(item =>
-            item.id === product.id 
-              ? { ...item, quantity: item.quantity + 1 } 
+          return prevCart.map((item) =>
+            item.id === product.id
+              ? { ...item, quantity: item.quantity + 1 }
               : item
           );
         }
         return [...prevCart, { ...product, quantity: 1 }];
       } else {
         if (existingItem && existingItem.quantity > 1) {
-          return prevCart.map(item =>
-            item.id === product.id 
-              ? { ...item, quantity: item.quantity - 1 } 
+          return prevCart.map((item) =>
+            item.id === product.id
+              ? { ...item, quantity: item.quantity - 1 }
               : item
           );
         }
-        return prevCart.filter(item => item.id !== product.id);
+        return prevCart.filter((item) => item.id !== product.id);
       }
     });
   };
@@ -202,7 +202,9 @@ const ProductListScreen = ({ navigation }) => {
         <Text style={styles.productName}>{item.nombre}</Text>
         <View style={styles.actionsContainer}>
           <TouchableOpacity
-            onPress={() => navigation.navigate("EditProduct", { productId: item.id })}
+            onPress={() =>
+              navigation.navigate("EditProduct", { productId: item.id })
+            }
             style={styles.editButton}
           >
             <Ionicons name="pencil" size={18} color="white" />
@@ -215,7 +217,7 @@ const ProductListScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-      
+
       {item.descripcion && (
         <Text style={styles.description}>{item.descripcion}</Text>
       )}
@@ -228,14 +230,23 @@ const ProductListScreen = ({ navigation }) => {
       <View style={styles.detailRow}>
         <Text style={styles.detailLabel}>Stock:</Text>
         <View style={styles.stockContainer}>
-          <Text style={[
-            styles.detailValue,
-            item.stockMinimo !== null && item.stock < item.stockMinimo && styles.lowStock
-          ]}>
+          <Text
+            style={[
+              styles.detailValue,
+              item.stockMinimo !== null &&
+                item.stock < item.stockMinimo &&
+                styles.lowStock,
+            ]}
+          >
             {item.stock}
           </Text>
           {item.stockMinimo !== null && item.stock < item.stockMinimo && (
-            <Ionicons name="warning" size={16} color="#ff5252" style={styles.warningIcon} />
+            <Ionicons
+              name="warning"
+              size={16}
+              color="#ff5252"
+              style={styles.warningIcon}
+            />
           )}
         </View>
       </View>
@@ -244,7 +255,8 @@ const ProductListScreen = ({ navigation }) => {
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Familia:</Text>
           <Text style={styles.detailValue}>
-            {familias.find(f => f.id === item.familiaId)?.nombre || 'Sin familia'}
+            {familias.find((f) => f.id === item.familiaId)?.nombre ||
+              "Sin familia"}
           </Text>
         </View>
       )}
@@ -260,32 +272,40 @@ const ProductListScreen = ({ navigation }) => {
       <View style={styles.cartControls}>
         {selectedProduct === item.id ? (
           <View style={styles.quantityControls}>
-            <TouchableOpacity 
-              onPress={() => handleCartAction(item, 'remove')}
+            <TouchableOpacity
+              onPress={() => handleCartAction(item, "remove")}
               style={styles.controlButton}
             >
               <Ionicons name="remove" size={20} color="#FF9800" />
             </TouchableOpacity>
-            
+
             <Text style={styles.quantityText}>
-              {cart.find(p => p.id === item.id)?.quantity || 0}
+              {cart.find((p) => p.id === item.id)?.quantity || 0}
             </Text>
-            
-            <TouchableOpacity 
-              onPress={() => handleCartAction(item, 'add')}
+
+            <TouchableOpacity
+              onPress={() => handleCartAction(item, "add")}
               style={styles.controlButton}
               disabled={item.stock <= 0}
             >
-              <Ionicons name="add" size={20} color={item.stock > 0 ? "#FF9800" : "#ccc"} />
+              <Ionicons
+                name="add"
+                size={20}
+                color={item.stock > 0 ? "#FF9800" : "#ccc"}
+              />
             </TouchableOpacity>
           </View>
         ) : (
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => setSelectedProduct(item.id)}
             style={styles.cartButton}
             disabled={item.stock <= 0}
           >
-            <Ionicons name="cart" size={24} color={item.stock > 0 ? "#FF9800" : "#ccc"} />
+            <Ionicons
+              name="cart"
+              size={24}
+              color={item.stock > 0 ? "#FF9800" : "#ccc"}
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -294,7 +314,7 @@ const ProductListScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <LinearGradient colors={['#000428', '#004e92']} style={styles.fullScreen}>
+      <LinearGradient colors={["#000428", "#004e92"]} style={styles.fullScreen}>
         <View style={styles.center}>
           <ActivityIndicator size="large" color="white" />
           <Text style={styles.loadingText}>Cargando productos...</Text>
@@ -305,7 +325,7 @@ const ProductListScreen = ({ navigation }) => {
 
   if (error) {
     return (
-      <LinearGradient colors={['#000428', '#004e92']} style={styles.fullScreen}>
+      <LinearGradient colors={["#000428", "#004e92"]} style={styles.fullScreen}>
         <StatusBar translucent backgroundColor="transparent" />
         <View style={styles.center}>
           <Text style={styles.errorText}>{error}</Text>
@@ -318,13 +338,18 @@ const ProductListScreen = ({ navigation }) => {
   }
 
   return (
-    <LinearGradient colors={['#000428', '#004e92']} style={styles.fullScreen}>
+    <LinearGradient colors={["#000428", "#004e92"]} style={styles.fullScreen}>
       <StatusBar translucent backgroundColor="transparent" />
-      
+
       {/* Barra de búsqueda */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
-          <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+          <Ionicons
+            name="search"
+            size={20}
+            color="#999"
+            style={styles.searchIcon}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar por nombre o código..."
@@ -334,10 +359,19 @@ const ProductListScreen = ({ navigation }) => {
             onSubmitEditing={handleSearch}
           />
         </View>
-        
+
         <TouchableOpacity
           style={styles.scanButton}
-          onPress={() => navigation.navigate("BarcodeScanner", { mode: "search" })}
+          onPress={() =>
+            navigation.navigate("BarcodeScanner", {
+              mode: "search",
+              onBarcodeScanned: (codigo) => {
+                setSearchTerm(codigo);
+                // Dispara la búsqueda automáticamente
+                setTimeout(() => handleSearch(), 300);
+              },
+            })
+          }
         >
           <Ionicons name="barcode-outline" size={24} color="white" />
         </TouchableOpacity>
@@ -359,35 +393,40 @@ const ProductListScreen = ({ navigation }) => {
 
       {/* Botón flotante del carrito */}
       {cart.length > 0 && (
-        <TouchableOpacity 
-        style={styles.floatingCart}
-        onPress={() => navigation.navigate('CartScreen', { 
-          cart,
-          updateCart: (updatedCart) => setCart(updatedCart) 
-        })}
-      >
-        <Ionicons name="cart" size={28} color="white" />
-        <View style={styles.cartBadge}>
-          <Text style={styles.cartBadgeText}>
-            {cart.reduce((total, item) => total + item.quantity, 0)}
-          </Text>
-        </View>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.floatingCart}
+          onPress={() =>
+            navigation.navigate("CartScreen", {
+              cart,
+              updateCart: (updatedCart) => setCart(updatedCart),
+            })
+          }
+        >
+          <Ionicons name="cart" size={28} color="white" />
+          <View style={styles.cartBadge}>
+            <Text style={styles.cartBadgeText}>
+              {cart.reduce((total, item) => total + item.quantity, 0)}
+            </Text>
+          </View>
+        </TouchableOpacity>
       )}
 
       {/* Modal de familia */}
       <Modal visible={showFamiliaModal} transparent animationType="slide">
         <View style={styles.modalContainer}>
-          <LinearGradient colors={['#000428', '#004e92']} style={styles.modalContent}>
-            <TouchableOpacity 
-              style={styles.closeButton} 
+          <LinearGradient
+            colors={["#000428", "#004e92"]}
+            style={styles.modalContent}
+          >
+            <TouchableOpacity
+              style={styles.closeButton}
               onPress={() => setShowFamiliaModal(false)}
             >
               <Ionicons name="close" size={24} color="white" />
             </TouchableOpacity>
-            
+
             <Text style={styles.modalTitle}>Nueva Familia</Text>
-            
+
             <TextInput
               placeholder="Nombre de la familia (ej: Aceites)"
               placeholderTextColor="#aaa"
@@ -395,7 +434,7 @@ const ProductListScreen = ({ navigation }) => {
               onChangeText={setNewFamiliaNombre}
               style={styles.modalInput}
             />
-            
+
             <TouchableOpacity
               style={styles.createButton}
               onPress={handleCreateFamilia}
@@ -415,39 +454,39 @@ const styles = StyleSheet.create({
   },
   center: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
-    color: 'white',
+    color: "white",
     marginTop: 10,
   },
   errorText: {
-    color: '#ff5252',
+    color: "#ff5252",
     fontSize: 16,
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   retryButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: "rgba(255,255,255,0.2)",
     padding: 12,
     borderRadius: 8,
   },
   retryButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
   },
   searchContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 15,
     paddingTop: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   searchInputContainer: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.2)",
     borderRadius: 10,
     paddingHorizontal: 15,
   },
@@ -456,86 +495,86 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: 'white',
+    color: "white",
     height: 40,
   },
   scanButton: {
     marginLeft: 10,
     padding: 10,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: "rgba(255,255,255,0.2)",
     borderRadius: 10,
   },
   noProductsText: {
-    color: 'rgba(255,255,255,0.7)',
+    color: "rgba(255,255,255,0.7)",
     fontSize: 16,
   },
   productCard: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: "rgba(255,255,255,0.1)",
     marginHorizontal: 15,
     marginBottom: 15,
     padding: 15,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: "rgba(255,255,255,0.2)",
   },
   cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 10,
   },
   productName: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
     flex: 1,
   },
   description: {
-    color: 'rgba(255,255,255,0.7)',
+    color: "rgba(255,255,255,0.7)",
     marginBottom: 8,
   },
   detailRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   detailLabel: {
     width: 80,
-    color: 'rgba(255,255,255,0.7)',
+    color: "rgba(255,255,255,0.7)",
   },
   detailValue: {
     flex: 1,
-    color: 'white',
+    color: "white",
   },
   stockContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   lowStock: {
-    color: '#ff5252',
+    color: "#ff5252",
   },
   warningIcon: {
     marginLeft: 5,
   },
   actionsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   editButton: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#4CAF50',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#4CAF50",
+    justifyContent: "center",
+    alignItems: "center",
     marginLeft: 10,
   },
   deleteButton: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#F44336',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#F44336",
+    justifyContent: "center",
+    alignItems: "center",
     marginLeft: 10,
   },
   listContent: {
@@ -543,56 +582,56 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalContent: {
-    width: '80%',
+    width: "80%",
     padding: 20,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: "rgba(255,255,255,0.2)",
   },
   closeButton: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
   },
   modalTitle: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   modalInput: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    color: 'white',
+    backgroundColor: "rgba(255,255,255,0.2)",
+    color: "white",
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: "rgba(255,255,255,0.2)",
   },
   createButton: {
-    backgroundColor: '#FF9800',
+    backgroundColor: "#FF9800",
     padding: 15,
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   createButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
     fontSize: 16,
   },
   cartControls: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "flex-end",
     marginTop: 10,
   },
   quantityControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -602,38 +641,38 @@ const styles = StyleSheet.create({
   },
   quantityText: {
     marginHorizontal: 10,
-    color: 'white',
+    color: "white",
   },
   cartButton: {
     padding: 8,
   },
   floatingCart: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 20,
     right: 20,
-    backgroundColor: '#FF9800',
+    backgroundColor: "#FF9800",
     width: 60,
     height: 60,
     borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     elevation: 5,
   },
   cartBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: -5,
     right: -5,
-    backgroundColor: 'red',
+    backgroundColor: "red",
     borderRadius: 10,
     width: 20,
     height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   cartBadgeText: {
-    color: 'white',
+    color: "white",
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 
