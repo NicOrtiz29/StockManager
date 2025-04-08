@@ -4,7 +4,7 @@
     "slug": "stock-manager",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/LOGOAPP.png",
+    "icon": "./assets/favicon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -23,7 +23,7 @@
     ],
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/LOGOAPP.png",
+        "foregroundImage": "./assets/iconn.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [

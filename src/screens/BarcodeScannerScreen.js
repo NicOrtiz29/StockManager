@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator,Alert } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, Alert } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
@@ -7,6 +7,7 @@ import { db } from '../config/firebaseConfig';
 export default function BarcodeScannerScreen({ navigation, route }) {
   const [hasPermission, setHasPermission] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [scanned, setScanned] = useState(false);
   const { onBarcodeScanned } = route.params || {};
 
   // Solicitar permisos
@@ -17,21 +18,36 @@ export default function BarcodeScannerScreen({ navigation, route }) {
     })();
   }, []);
 
-  // Manejo del escaneo
+  // Reiniciar bandera al montar
+  useEffect(() => {
+    setScanned(false);
+  }, []);
+
   const handleBarCodeScanned = async ({ data }) => {
+    if (scanned) return;
+    setScanned(true);
     setLoading(true);
-    
+
     try {
       if (onBarcodeScanned) {
-        // Primero actualizamos el código
         onBarcodeScanned(data);
-        // Esperamos un breve momento antes de navegar
         await new Promise(resolve => setTimeout(resolve, 300));
-        navigation.pop(1); // cierra una pantalla y vuelve a la anterior
+        navigation.goBack();
         return;
       }
-  
-      // Resto del código para búsqueda...
+
+      // Si no hay función de escaneo externa, podrías buscar en Firebase
+      const q = query(collection(db, 'productos'), where('codigo', '==', data));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const producto = querySnapshot.docs[0].data();
+        Alert.alert('Producto encontrado', `Nombre: ${producto.nombre}`);
+        // Podrías redirigir a otra pantalla si querés
+      } else {
+        Alert.alert('No encontrado', 'El código no se encuentra en la base de datos.');
+      }
+
     } catch (error) {
       Alert.alert('Error', 'Error al procesar el código');
       console.error(error);
@@ -40,7 +56,6 @@ export default function BarcodeScannerScreen({ navigation, route }) {
     }
   };
 
-  // Estados de permisos
   if (hasPermission === null) {
     return (
       <View style={styles.container}>
@@ -48,7 +63,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
       </View>
     );
   }
-  
+
   if (hasPermission === false) {
     return (
       <View style={styles.container}>
@@ -89,6 +104,7 @@ export default function BarcodeScannerScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#000', // fondo base oscuro
     flexDirection: 'column',
     justifyContent: 'center',
   },
