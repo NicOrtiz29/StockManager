@@ -1,10 +1,27 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  Alert,
+  ScrollView,
+  SafeAreaView,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
-const BUTTON_SIZE = width * 0.3;
+
+// Tamaño del botón adaptativo
+const getButtonSize = () => {
+  if (width < 400) return width * 0.38;
+  if (width < 768) return width * 0.3;
+  return width * 0.22;
+};
+
+const BUTTON_SIZE = getButtonSize();
 
 const MainMenuScreen = ({ navigation }) => {
   const handleLogout = () => {
@@ -12,105 +29,69 @@ const MainMenuScreen = ({ navigation }) => {
       "Cerrar Sesión",
       "¿Estás seguro que deseas cerrar sesión?",
       [
-        {
-          text: "Cancelar",
-          style: "cancel"
-        },
-        { 
-          text: "Cerrar Sesión", 
-          onPress: () => navigation.replace('Login') 
-        }
+        { text: "Cancelar", style: "cancel" },
+        { text: "Cerrar Sesión", onPress: () => navigation.replace('Login') },
       ]
     );
   };
 
   const menuItems = [
-    {
-      title: "Productos",
-      icon: "list",
-      action: () => navigation.navigate('AppTabs')
-    },
-    {
-      title: "Agregar Producto",
-      icon: "add-circle",
-      action: () => navigation.navigate('AddProduct')
-    },
-    {
-      title: "Proveedores",
-      icon: "people",
-      action: () => navigation.navigate('ProveedorList')
-    },
-    {
-      title: "Familias",
-      icon: "layers",
-      action: () => navigation.navigate('FamilyList')
-    },
-    {
-      title: "Aumentos",
-      icon: "trending-up",
-      action: () => navigation.navigate('BulkPriceUpdate')
-    },
-    {
-      title: "Historial Ventas",
-      icon: "receipt",
-      action: () => navigation.navigate('HistorialVentas')
-    },
-    {
-      title: "Agregar Usuario",
-      icon: "person-add",
-      action: () => navigation.navigate('AddUserScreen')
-    },
-    {
-      title: "Cerrar Sesión",
-      icon: "log-out",
-      action: handleLogout
-    },
+    { title: "Productos", icon: "list", action: () => navigation.navigate('AppTabs') },
+    { title: "Agregar Producto", icon: "add-circle", action: () => navigation.navigate('AddProduct') },
+    { title: "Proveedores", icon: "people", action: () => navigation.navigate('ProveedorList') },
+    { title: "Familias", icon: "layers", action: () => navigation.navigate('FamilyList') },
+    { title: "Aumentos", icon: "trending-up", action: () => navigation.navigate('BulkPriceUpdate') },
+    { title: "Historial Ventas", icon: "receipt", action: () => navigation.navigate('HistorialVentas') },
+    { title: "Agregar Usuario", icon: "person-add", action: () => navigation.navigate('AddUserScreen') },
+    { title: "Cerrar Sesión", icon: "log-out", action: handleLogout },
   ];
 
   return (
-    <LinearGradient
-      colors={['#000428', '#004e92']}
-      style={styles.container}
-    >
-      <Text style={styles.header}>TLN AUTORRADIO</Text>
-      
-      <View style={styles.grid}>
-        {menuItems.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.button}
-            onPress={item.action}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.1)']}
-              style={styles.buttonInner}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Ionicons name={item.icon} size={30} color="white" />
-              <Text style={styles.buttonText}>{item.title}</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        ))}
-      </View>
+    <LinearGradient colors={['#000428', '#004e92']} style={styles.gradient}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <Text style={styles.header}>TLN AUTORRADIO</Text>
+
+          <View style={styles.grid}>
+            {menuItems.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[styles.button, { width: BUTTON_SIZE, height: BUTTON_SIZE }]}
+                onPress={item.action}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.1)']}
+                  style={styles.buttonInner}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Ionicons name={item.icon} size={30} color="white" />
+                  <Text style={styles.buttonText}>{item.title}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     </LinearGradient>
   );
 };
 
-// Mantén los mismos estilos que ya tenías
 const styles = StyleSheet.create({
-  container: {
+  gradient: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  scrollContent: {
     alignItems: 'center',
     padding: 15,
+    paddingBottom: 40,
   },
   header: {
     color: 'white',
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 40,
+    marginVertical: 30,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
@@ -122,8 +103,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   button: {
-    width: BUTTON_SIZE,
-    height: BUTTON_SIZE,
     margin: 10,
     borderRadius: 15,
     elevation: 5,

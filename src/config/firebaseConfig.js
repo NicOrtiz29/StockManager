@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBhInymqBkQ3hyw90CC8uuX7dOqEySw2DU",
@@ -13,13 +14,20 @@ const firebaseConfig = {
   appId: "1:887170478122:web:c6ee5ef6d981c1b624d353"
 };
 
-const app = initializeApp(firebaseConfig); // Inicializa Firebase
+// Inicializar Firebase
+const app = initializeApp(firebaseConfig);
 
-// Configurar persistencia de sesión
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
-});
+// ⚠️ Autenticación compatible con web y móvil
+let auth;
+if (Platform.OS === 'web') {
+  auth = getAuth(app); // Web no necesita persistencia personalizada
+} else {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+  });
+}
 
-const db = getFirestore(app); // Inicializa Firestore
+// Inicializar Firestore
+const db = getFirestore(app);
 
-export { app, auth, db }; // Exporta app, auth y db
+export { app, auth, db };

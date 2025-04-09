@@ -22,7 +22,6 @@ import {
 } from "../services/productService";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRoute } from "@react-navigation/native";
 
 const AddProductScreen = ({ navigation, route }) => {
   const [nombre, setNombre] = useState("");
@@ -68,7 +67,6 @@ const AddProductScreen = ({ navigation, route }) => {
     if (mostrarCalculadora && precioCompra && porcentajeAumento) {
       const precioCompraNum = parseFloat(precioCompra);
       const porcentajeNum = parseFloat(porcentajeAumento);
-
       if (!isNaN(precioCompraNum) && !isNaN(porcentajeNum)) {
         const nuevoPrecioVenta = precioCompraNum * (1 + porcentajeNum / 100);
         setPrecioVenta(nuevoPrecioVenta.toFixed(2));
@@ -97,17 +95,12 @@ const AddProductScreen = ({ navigation, route }) => {
     }
 
     if (parseFloat(precioVenta) <= parseFloat(precioCompra)) {
-      Alert.alert(
-        "Error",
-        "El precio de venta debe ser mayor al precio de compra"
-      );
+      Alert.alert("Error", "El precio de venta debe ser mayor al precio de compra");
       return;
     }
+
     if (stockMinimo && parseInt(stock) < parseInt(stockMinimo)) {
-      Alert.alert(
-        "Advertencia",
-        "El stock actual es menor que el stock mínimo definido"
-      );
+      Alert.alert("Advertencia", "El stock actual es menor que el stock mínimo definido");
     }
 
     setLoading(true);
@@ -138,7 +131,6 @@ const AddProductScreen = ({ navigation, route }) => {
 
   const handleCreateFamilia = async () => {
     if (!newFamiliaNombre.trim()) return;
-
     try {
       await createFamilia(newFamiliaNombre.trim());
       Alert.alert("Éxito", "Familia creada correctamente");
@@ -164,7 +156,6 @@ const AddProductScreen = ({ navigation, route }) => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Espacio para el header */}
           <View style={styles.formContainer} />
 
           <TextInput
@@ -174,7 +165,6 @@ const AddProductScreen = ({ navigation, route }) => {
             onChangeText={setNombre}
             style={styles.input}
           />
-
           <TextInput
             placeholder="Descripción*"
             placeholderTextColor="#aaa"
@@ -183,7 +173,6 @@ const AddProductScreen = ({ navigation, route }) => {
             style={[styles.input, styles.multilineInput]}
             multiline
           />
-
           <View style={styles.priceContainer}>
             <TextInput
               placeholder="Precio de compra*"
@@ -193,10 +182,7 @@ const AddProductScreen = ({ navigation, route }) => {
               keyboardType="numeric"
               style={[styles.input, styles.priceInput]}
             />
-            <TouchableOpacity
-              onPress={toggleCalculadora}
-              style={styles.calculatorIconButton}
-            >
+            <TouchableOpacity onPress={toggleCalculadora} style={styles.calculatorIconButton}>
               <Ionicons
                 name={mostrarCalculadora ? "calculator" : "calculator-outline"}
                 size={20}
@@ -205,7 +191,6 @@ const AddProductScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           </View>
 
-          {/* Eliminamos el calculatorButton original y movemos su contenido aquí */}
           {mostrarCalculadora && (
             <>
               <TextInput
@@ -216,11 +201,8 @@ const AddProductScreen = ({ navigation, route }) => {
                 keyboardType="numeric"
                 style={styles.input}
               />
-
               <View style={styles.marginInfo}>
-                <Text style={styles.marginText}>
-                  Margen de ganancia: {calcularMargen()}%
-                </Text>
+                <Text style={styles.marginText}>Margen de ganancia: {calcularMargen()}%</Text>
               </View>
             </>
           )}
@@ -234,7 +216,6 @@ const AddProductScreen = ({ navigation, route }) => {
             style={styles.input}
             editable={!mostrarCalculadora}
           />
-
           <TextInput
             placeholder="Stock*"
             placeholderTextColor="#aaa"
@@ -243,7 +224,6 @@ const AddProductScreen = ({ navigation, route }) => {
             keyboardType="numeric"
             style={styles.input}
           />
-
           <TextInput
             placeholder="Stock mínimo alerta (opcional)"
             placeholderTextColor="#aaa"
@@ -252,7 +232,6 @@ const AddProductScreen = ({ navigation, route }) => {
             keyboardType="numeric"
             style={styles.input}
           />
-
           <View style={styles.barcodeContainer}>
             <TextInput
               placeholder="Código de Barras (opcional)"
@@ -265,9 +244,7 @@ const AddProductScreen = ({ navigation, route }) => {
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate("BarcodeScanner", {
-                  onBarcodeScanned: (barcode) => {
-                    setCodigoBarras(barcode); // Actualiza el estado
-                  },
+                  onBarcodeScanned: (barcode) => setCodigoBarras(barcode),
                 })
               }
               style={styles.scanButton}
@@ -283,11 +260,7 @@ const AddProductScreen = ({ navigation, route }) => {
               style={styles.picker}
               dropdownIconColor="white"
             >
-              <Picker.Item
-                label="Selecciona un proveedor*"
-                value=""
-                color="#aaa"
-              />
+              <Picker.Item label="Selecciona un proveedor*" value="" color="#000" />
               {proveedores.map((proveedor) => (
                 <Picker.Item
                   key={proveedor.id}
@@ -305,13 +278,8 @@ const AddProductScreen = ({ navigation, route }) => {
               onValueChange={setFamiliaId}
               style={styles.picker}
               dropdownIconColor="white"
-              enabled={true}
             >
-              <Picker.Item
-                label="Selecciona una familia (opcional)"
-                value=""
-                color="#aaa" // Cambiamos de #aaa a white
-              />
+              <Picker.Item label="Selecciona una familia (opcional)" value="" color="#000" />
               {familias.map((familia) => (
                 <Picker.Item
                   key={familia.id}
@@ -337,13 +305,10 @@ const AddProductScreen = ({ navigation, route }) => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Modal para agregar familia */}
+      {/* MODAL */}
       <Modal visible={showFamiliaModal} transparent animationType="slide">
         <View style={styles.modalContainer}>
-          <LinearGradient
-            colors={["#000428", "#004e92"]}
-            style={styles.modalContent}
-          >
+          <LinearGradient colors={["#000428", "#004e92"]} style={styles.modalContent}>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowFamiliaModal(false)}
@@ -352,7 +317,6 @@ const AddProductScreen = ({ navigation, route }) => {
             </TouchableOpacity>
 
             <Text style={styles.modalTitle}>Nueva Familia</Text>
-
             <TextInput
               placeholder="Nombre de la familia (ej: Aceites)"
               placeholderTextColor="black"
@@ -360,11 +324,7 @@ const AddProductScreen = ({ navigation, route }) => {
               onChangeText={setNewFamiliaNombre}
               style={styles.modalInput}
             />
-
-            <TouchableOpacity
-              style={styles.createButton}
-              onPress={handleCreateFamilia}
-            >
+            <TouchableOpacity style={styles.createButton} onPress={handleCreateFamilia}>
               <Text style={styles.createButtonText}>Crear Familia</Text>
             </TouchableOpacity>
           </LinearGradient>
@@ -387,6 +347,9 @@ const styles = StyleSheet.create({
   scrollContainer: {
     padding: 15,
     paddingBottom: 100,
+    width: "100%",
+    maxWidth: 600,
+    alignSelf: "center",
   },
   input: {
     backgroundColor: "rgba(255,255,255,0.2)",
@@ -401,21 +364,17 @@ const styles = StyleSheet.create({
     minHeight: 100,
     textAlignVertical: "top",
   },
-  calculatorButton: {
-    flexDirection: "row",
+  calculatorIconButton: {
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.2)",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
+    marginLeft: 10,
   },
-  calculatorButtonText: {
-    color: "white",
-    fontWeight: "600",
-    marginRight: 10,
+  priceContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  priceInput: {
+    flex: 1,
   },
   marginInfo: {
     backgroundColor: "rgba(255,255,255,0.1)",
@@ -463,11 +422,11 @@ const styles = StyleSheet.create({
   barcodeInput: {
     flex: 1,
     marginRight: 10,
-    marginBottom: 0, // Asegurarse que no tenga margen inferior
+    marginBottom: 0,
   },
   scanButton: {
-    height: 50, // Misma altura que el input
-    width: 50, // Ancho fijo para mantener proporción
+    height: 50,
+    width: 50,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.2)",
@@ -483,6 +442,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "90%",
+    maxWidth: 500,
     borderRadius: 15,
     padding: 20,
     paddingTop: 40,
@@ -491,49 +451,20 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "white",
+    marginBottom: 15,
     textAlign: "center",
-    marginBottom: 20,
   },
   modalInput: {
-    backgroundColor: "rgba(255,255,255,0.2)",
-    color: "white",
+    backgroundColor: "white",
     borderRadius: 10,
     padding: 15,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
+    marginBottom: 15,
   },
   closeButton: {
     position: "absolute",
-    top: 15,
-    right: 15,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  priceContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  priceInput: {
-    flex: 1,
-    marginRight: 10,
-    marginBottom: 0,
-  },
-  calculatorIconButton: {
-    height: 50,
-    width: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.2)",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
+    top: 10,
+    right: 10,
+    zIndex: 10,
   },
 });
 

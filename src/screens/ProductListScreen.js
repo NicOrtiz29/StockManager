@@ -11,6 +11,8 @@ import {
   Modal,
   StatusBar,
   BackHandler,
+  Dimensions,
+  ScrollView
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -23,6 +25,11 @@ import {
 } from "../services/productService";
 import { Ionicons } from "@expo/vector-icons";
 
+// Obtener dimensiones iniciales
+const { width, height } = Dimensions.get('window');
+const isSmallDevice = width < 375;
+const isTablet = width > 768;
+
 const ProductListScreen = ({ navigation }) => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -34,6 +41,15 @@ const ProductListScreen = ({ navigation }) => {
   const [familias, setFamilias] = useState([]);
   const [cart, setCart] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [dimensions, setDimensions] = useState({ width, height });
+
+  // Manejar cambios de orientación
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+    return () => subscription?.remove();
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -197,9 +213,17 @@ const ProductListScreen = ({ navigation }) => {
   };
 
   const renderProductItem = ({ item }) => (
-    <View style={styles.productCard}>
+    <View style={[
+      styles.productCard,
+      dimensions.width > 768 && styles.tabletProductCard
+    ]}>
       <View style={styles.cardHeader}>
-        <Text style={styles.productName}>{item.nombre}</Text>
+        <Text style={[
+          styles.productName,
+          isSmallDevice && styles.smallDeviceProductName
+        ]}>
+          {item.nombre}
+        </Text>
         <View style={styles.actionsContainer}>
           <TouchableOpacity
             onPress={() =>
@@ -207,13 +231,13 @@ const ProductListScreen = ({ navigation }) => {
             }
             style={styles.editButton}
           >
-            <Ionicons name="pencil" size={18} color="white" />
+            <Ionicons name="pencil" size={isSmallDevice ? 16 : 18} color="white" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => handleDeleteProduct(item.id)}
             style={styles.deleteButton}
           >
-            <Ionicons name="trash" size={18} color="white" />
+            <Ionicons name="trash" size={isSmallDevice ? 16 : 18} color="white" />
           </TouchableOpacity>
         </View>
       </View>
@@ -222,53 +246,57 @@ const ProductListScreen = ({ navigation }) => {
         <Text style={styles.description}>{item.descripcion}</Text>
       )}
 
-      <View style={styles.detailRow}>
-        <Text style={styles.detailLabel}>Precio:</Text>
-        <Text style={styles.detailValue}>${item.precioVenta}</Text>
+      <View style={[
+        styles.detailsContainer,
+        dimensions.width > 768 && styles.tabletDetailsContainer
+      ]}>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Precio:</Text>
+          <Text style={styles.detailValue}>${item.precioVenta}</Text>
+        </View>
+
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Stock:</Text>
+          <View style={styles.stockContainer}>
+            <Text
+              style={[
+                styles.detailValue,
+                item.stockMinimo !== null &&
+                  item.stock < item.stockMinimo &&
+                  styles.lowStock,
+              ]}
+            >
+              {item.stock}
+            </Text>
+            {item.stockMinimo !== null && item.stock < item.stockMinimo && (
+              <Ionicons
+                name="warning"
+                size={isSmallDevice ? 14 : 16}
+                color="#ff5252"
+                style={styles.warningIcon}
+              />
+            )}
+          </View>
+        </View>
+
+        {item.familiaId && (
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Familia:</Text>
+            <Text style={styles.detailValue}>
+              {familias.find((f) => f.id === item.familiaId)?.nombre ||
+                "Sin familia"}
+            </Text>
+          </View>
+        )}
+
+        {item.codigoBarras && (
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Código:</Text>
+            <Text style={styles.detailValue}>{item.codigoBarras}</Text>
+          </View>
+        )}
       </View>
 
-      <View style={styles.detailRow}>
-        <Text style={styles.detailLabel}>Stock:</Text>
-        <View style={styles.stockContainer}>
-          <Text
-            style={[
-              styles.detailValue,
-              item.stockMinimo !== null &&
-                item.stock < item.stockMinimo &&
-                styles.lowStock,
-            ]}
-          >
-            {item.stock}
-          </Text>
-          {item.stockMinimo !== null && item.stock < item.stockMinimo && (
-            <Ionicons
-              name="warning"
-              size={16}
-              color="#ff5252"
-              style={styles.warningIcon}
-            />
-          )}
-        </View>
-      </View>
-
-      {item.familiaId && (
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Familia:</Text>
-          <Text style={styles.detailValue}>
-            {familias.find((f) => f.id === item.familiaId)?.nombre ||
-              "Sin familia"}
-          </Text>
-        </View>
-      )}
-
-      {item.codigoBarras && (
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Código:</Text>
-          <Text style={styles.detailValue}>{item.codigoBarras}</Text>
-        </View>
-      )}
-
-      {/* Controles del carrito */}
       <View style={styles.cartControls}>
         {selectedProduct === item.id ? (
           <View style={styles.quantityControls}>
@@ -346,7 +374,7 @@ const ProductListScreen = ({ navigation }) => {
         <View style={styles.searchInputContainer}>
           <Ionicons
             name="search"
-            size={20}
+            size={isSmallDevice ? 18 : 20}
             color="#999"
             style={styles.searchIcon}
           />
@@ -367,13 +395,16 @@ const ProductListScreen = ({ navigation }) => {
               mode: "search",
               onBarcodeScanned: (codigo) => {
                 setSearchTerm(codigo);
-                // Dispara la búsqueda automáticamente
                 setTimeout(() => handleSearch(), 300);
               },
             })
           }
         >
-          <Ionicons name="barcode-outline" size={24} color="white" />
+          <Ionicons 
+            name="barcode-outline" 
+            size={isSmallDevice ? 20 : 24} 
+            color="white" 
+          />
         </TouchableOpacity>
       </View>
 
@@ -388,13 +419,19 @@ const ProductListScreen = ({ navigation }) => {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           renderItem={renderProductItem}
+          numColumns={dimensions.width > 768 ? 2 : 1}
+          columnWrapperStyle={dimensions.width > 768 && styles.columnWrapper}
+          key={dimensions.width > 768 ? 'two-column' : 'one-column'}
         />
       )}
 
       {/* Botón flotante del carrito */}
       {cart.length > 0 && (
         <TouchableOpacity
-          style={styles.floatingCart}
+          style={[
+            styles.floatingCart,
+            dimensions.width > 768 && { bottom: 30, right: 30, width: 70, height: 70 }
+          ]}
           onPress={() =>
             navigation.navigate("CartScreen", {
               cart,
@@ -402,7 +439,11 @@ const ProductListScreen = ({ navigation }) => {
             })
           }
         >
-          <Ionicons name="cart" size={28} color="white" />
+          <Ionicons 
+            name="cart" 
+            size={dimensions.width > 768 ? 32 : 28} 
+            color="white" 
+          />
           <View style={styles.cartBadge}>
             <Text style={styles.cartBadgeText}>
               {cart.reduce((total, item) => total + item.quantity, 0)}
@@ -416,7 +457,10 @@ const ProductListScreen = ({ navigation }) => {
         <View style={styles.modalContainer}>
           <LinearGradient
             colors={["#000428", "#004e92"]}
-            style={styles.modalContent}
+            style={[
+              styles.modalContent,
+              dimensions.width > 768 && { width: '60%', padding: 30 }
+            ]}
           >
             <TouchableOpacity
               style={styles.closeButton}
@@ -460,26 +504,29 @@ const styles = StyleSheet.create({
   loadingText: {
     color: "white",
     marginTop: 10,
+    fontSize: isSmallDevice ? 14 : 16,
   },
   errorText: {
     color: "#ff5252",
-    fontSize: 16,
+    fontSize: isSmallDevice ? 14 : 16,
     marginBottom: 16,
     textAlign: "center",
+    paddingHorizontal: 20,
   },
   retryButton: {
     backgroundColor: "rgba(255,255,255,0.2)",
-    padding: 12,
+    padding: isSmallDevice ? 10 : 12,
     borderRadius: 8,
   },
   retryButtonText: {
     color: "white",
     fontWeight: "bold",
+    fontSize: isSmallDevice ? 14 : 16,
   },
   searchContainer: {
     flexDirection: "row",
-    padding: 15,
-    paddingTop: 10,
+    padding: isSmallDevice ? 10 : 15,
+    paddingTop: isSmallDevice ? 5 : 10,
     alignItems: "center",
   },
   searchInputContainer: {
@@ -488,63 +535,83 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.2)",
     borderRadius: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: isSmallDevice ? 10 : 15,
+    height: isTablet ? 50 : isSmallDevice ? 38 : 40,
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: isSmallDevice ? 8 : 10,
   },
   searchInput: {
     flex: 1,
     color: "white",
-    height: 40,
+    fontSize: isSmallDevice ? 14 : 16,
   },
   scanButton: {
-    marginLeft: 10,
-    padding: 10,
+    marginLeft: isSmallDevice ? 8 : 10,
+    padding: isSmallDevice ? 8 : 10,
     backgroundColor: "rgba(255,255,255,0.2)",
     borderRadius: 10,
   },
   noProductsText: {
     color: "rgba(255,255,255,0.7)",
-    fontSize: 16,
+    fontSize: isSmallDevice ? 14 : 16,
   },
   productCard: {
     backgroundColor: "rgba(255,255,255,0.1)",
-    marginHorizontal: 15,
+    marginHorizontal: isTablet ? 20 : 15,
     marginBottom: 15,
-    padding: 15,
+    padding: isTablet ? 20 : 15,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.2)",
+  },
+  tabletProductCard: {
+    width: isTablet ? '90%' : 'auto',
+    alignSelf: isTablet ? 'center' : 'auto',
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: isSmallDevice ? 8 : 10,
   },
   productName: {
-    fontSize: 18,
+    fontSize: isTablet ? 20 : isSmallDevice ? 16 : 18,
     fontWeight: "bold",
     color: "white",
     flex: 1,
   },
+  smallDeviceProductName: {
+    fontSize: 15,
+  },
   description: {
     color: "rgba(255,255,255,0.7)",
-    marginBottom: 8,
+    marginBottom: isSmallDevice ? 6 : 8,
+    fontSize: isSmallDevice ? 13 : 14,
+  },
+  detailsContainer: {
+    marginTop: isSmallDevice ? 5 : 8,
+  },
+  tabletDetailsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   detailRow: {
     flexDirection: "row",
-    marginBottom: 8,
+    marginBottom: isSmallDevice ? 6 : 8,
     alignItems: "center",
+    minWidth: isTablet ? '48%' : '100%',
   },
   detailLabel: {
-    width: 80,
+    width: isTablet ? 100 : 80,
     color: "rgba(255,255,255,0.7)",
+    fontSize: isSmallDevice ? 13 : 14,
   },
   detailValue: {
     flex: 1,
     color: "white",
+    fontSize: isSmallDevice ? 13 : 14,
   },
   stockContainer: {
     flexDirection: "row",
@@ -560,25 +627,29 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   editButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: isSmallDevice ? 28 : 30,
+    height: isSmallDevice ? 28 : 30,
+    borderRadius: isSmallDevice ? 14 : 15,
     backgroundColor: "#4CAF50",
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 10,
+    marginLeft: isSmallDevice ? 8 : 10,
   },
   deleteButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: isSmallDevice ? 28 : 30,
+    height: isSmallDevice ? 28 : 30,
+    borderRadius: isSmallDevice ? 14 : 15,
     backgroundColor: "#F44336",
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 10,
+    marginLeft: isSmallDevice ? 8 : 10,
   },
   listContent: {
     paddingBottom: 20,
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
   },
   modalContainer: {
     flex: 1,
@@ -587,8 +658,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalContent: {
-    width: "80%",
-    padding: 20,
+    width: isTablet ? '60%' : '80%',
+    padding: isTablet ? 25 : 20,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.2)",
@@ -598,7 +669,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     color: "white",
-    fontSize: 18,
+    fontSize: isTablet ? 22 : 18,
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
@@ -606,45 +677,47 @@ const styles = StyleSheet.create({
   modalInput: {
     backgroundColor: "rgba(255,255,255,0.2)",
     color: "white",
-    padding: 15,
+    padding: isTablet ? 18 : 15,
     borderRadius: 10,
-    marginBottom: 15,
+    marginBottom: isTablet ? 20 : 15,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.2)",
+    fontSize: isTablet ? 18 : 16,
   },
   createButton: {
     backgroundColor: "#FF9800",
-    padding: 15,
+    padding: isTablet ? 18 : 15,
     borderRadius: 10,
     alignItems: "center",
   },
   createButtonText: {
     color: "white",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: isTablet ? 18 : 16,
   },
   cartControls: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    marginTop: 10,
+    marginTop: isSmallDevice ? 8 : 10,
   },
   quantityControls: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: isSmallDevice ? 8 : 10,
+    paddingVertical: isSmallDevice ? 4 : 5,
   },
   controlButton: {
     padding: 5,
   },
   quantityText: {
-    marginHorizontal: 10,
+    marginHorizontal: isSmallDevice ? 8 : 10,
     color: "white",
+    fontSize: isSmallDevice ? 14 : 16,
   },
   cartButton: {
-    padding: 8,
+    padding: isSmallDevice ? 6 : 8,
   },
   floatingCart: {
     position: "absolute",

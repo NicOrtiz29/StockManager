@@ -19,7 +19,8 @@
           "cameraPermission": "Necesitamos acceso a tu cámara para escanear códigos de barras"
         }
       ],
-      "expo-barcode-scanner"
+      "expo-barcode-scanner",
+      "expo-sqlite"
     ],
     "android": {
       "adaptiveIcon": {
