@@ -95,12 +95,18 @@ const AddProductScreen = ({ navigation, route }) => {
     }
 
     if (parseFloat(precioVenta) <= parseFloat(precioCompra)) {
-      Alert.alert("Error", "El precio de venta debe ser mayor al precio de compra");
+      Alert.alert(
+        "Error",
+        "El precio de venta debe ser mayor al precio de compra"
+      );
       return;
     }
 
     if (stockMinimo && parseInt(stock) < parseInt(stockMinimo)) {
-      Alert.alert("Advertencia", "El stock actual es menor que el stock mínimo definido");
+      Alert.alert(
+        "Advertencia",
+        "El stock actual es menor que el stock mínimo definido"
+      );
     }
 
     setLoading(true);
@@ -182,7 +188,10 @@ const AddProductScreen = ({ navigation, route }) => {
               keyboardType="numeric"
               style={[styles.input, styles.priceInput]}
             />
-            <TouchableOpacity onPress={toggleCalculadora} style={styles.calculatorIconButton}>
+            <TouchableOpacity
+              onPress={toggleCalculadora}
+              style={styles.calculatorIconButton}
+            >
               <Ionicons
                 name={mostrarCalculadora ? "calculator" : "calculator-outline"}
                 size={20}
@@ -202,7 +211,9 @@ const AddProductScreen = ({ navigation, route }) => {
                 style={styles.input}
               />
               <View style={styles.marginInfo}>
-                <Text style={styles.marginText}>Margen de ganancia: {calcularMargen()}%</Text>
+                <Text style={styles.marginText}>
+                  Margen de ganancia: {calcularMargen()}%
+                </Text>
               </View>
             </>
           )}
@@ -260,7 +271,11 @@ const AddProductScreen = ({ navigation, route }) => {
               style={styles.picker}
               dropdownIconColor="white"
             >
-              <Picker.Item label="Selecciona un proveedor*" value="" color="#000" />
+              <Picker.Item
+                label="Selecciona un proveedor*"
+                value=""
+                color="#000"
+              />
               {proveedores.map((proveedor) => (
                 <Picker.Item
                   key={proveedor.id}
@@ -279,7 +294,11 @@ const AddProductScreen = ({ navigation, route }) => {
               style={styles.picker}
               dropdownIconColor="white"
             >
-              <Picker.Item label="Selecciona una familia (opcional)" value="" color="#000" />
+              <Picker.Item
+                label="Selecciona una familia (opcional)"
+                value=""
+                color="#000"
+              />
               {familias.map((familia) => (
                 <Picker.Item
                   key={familia.id}
@@ -308,7 +327,10 @@ const AddProductScreen = ({ navigation, route }) => {
       {/* MODAL */}
       <Modal visible={showFamiliaModal} transparent animationType="slide">
         <View style={styles.modalContainer}>
-          <LinearGradient colors={["#000428", "#004e92"]} style={styles.modalContent}>
+          <LinearGradient
+            colors={["#000428", "#004e92"]}
+            style={styles.modalContent}
+          >
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowFamiliaModal(false)}
@@ -324,12 +346,21 @@ const AddProductScreen = ({ navigation, route }) => {
               onChangeText={setNewFamiliaNombre}
               style={styles.modalInput}
             />
-            <TouchableOpacity style={styles.createButton} onPress={handleCreateFamilia}>
+            <TouchableOpacity
+              style={styles.createButton}
+              onPress={handleCreateFamilia}
+            >
               <Text style={styles.createButtonText}>Crear Familia</Text>
             </TouchableOpacity>
           </LinearGradient>
         </View>
       </Modal>
+      <TouchableOpacity
+        style={[styles.floatingButton, { bottom: 20 }]}
+        onPress={() => navigation.navigate("ImportExcel")}
+      >
+        <Ionicons name="cloud-upload-outline" size={28} color="white" />
+      </TouchableOpacity>
     </LinearGradient>
   );
 };
@@ -466,6 +497,15 @@ const styles = StyleSheet.create({
     right: 10,
     zIndex: 10,
   },
+  floatingButton: {
+    position: "absolute",
+    right: 20,
+    backgroundColor: "#2196F3",
+    padding: 15,
+    borderRadius: 30,
+    elevation: 5,
+  },
+  
 });
 
 export default AddProductScreen;

@@ -8,6 +8,8 @@ import AddProveedorScreen from "../screens/AddProveedorScreen";
 import BulkPriceUpdateScreen from "../screens/BulkPriceUpdateScreen";
 import EditProveedorScreen from '../screens/EditProveedorScreen';
 import CartScreen from "../screens/CartScreen";
+import ImportExcelScreen from "../screens/ImportExcelScreen";
+
 
 const Stack = createStackNavigator();
 

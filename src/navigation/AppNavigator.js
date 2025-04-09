@@ -19,7 +19,7 @@ import CheckoutScreen from "../screens/CheckoutScreen";
 import HistorialVentasScreen from "../screens/HistorialVentasScreen";
 import DetalleVentaScreen from "../screens/DetalleVentaScreen";
 import AddUserScreen from "../screens/AddUserScreen";
-
+import ImportExcelScreen from "../screens/ImportExcelScreen";
 
 const Stack = createStackNavigator();
 
@@ -286,6 +286,12 @@ const AppNavigator = () => {
             headerBackTitle: "Menú",
           }}
         />
+        <Stack.Screen
+          name="ImportExcel"
+          component={ImportExcelScreen}
+          options={{ title: "Importar desde Excel" }}
+        />
+
         <Stack.Screen
           name="Checkout"
           component={CheckoutScreen}
