@@ -1,10 +1,10 @@
+// ImportExcelScreen.js
 import React, { useState } from 'react';
 import { View, Text, Button, FlatList, Alert, Platform } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx';
 import { collection, addDoc } from 'firebase/firestore';
-import { db } from '../config/firebaseConfig'; // Asegurate de que la ruta sea correcta
+import { db } from '../config/firebaseConfig';
 
 export default function ImportExcelScreen({ navigation }) {
   const [excelData, setExcelData] = useState([]);
@@ -12,89 +12,107 @@ export default function ImportExcelScreen({ navigation }) {
   const handlePickExcel = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: '*/*',
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         copyToCacheDirectory: true,
       });
 
-      if (result.canceled || !result.assets || result.assets.length === 0) return;
+      if (result.canceled) return;
 
-      const uri = result.assets[0].uri;
-
-      let fileData;
+      const fileUri = result.assets[0].uri;
 
       if (Platform.OS === 'web') {
-        const response = await fetch(uri);
+        const response = await fetch(fileUri);
         const blob = await response.blob();
-        fileData = await blob.arrayBuffer();
-        const workbook = XLSX.read(fileData, { type: 'array' });
-        const wsname = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(sheet);
-        setExcelData(data);
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(sheet);
+            setExcelData(json);
+          } catch (err) {
+            console.error('Error procesando el archivo Excel:', err);
+            Alert.alert('Error', 'El archivo Excel no es válido o está corrupto.');
+          }
+        };
+        reader.onerror = (err) => {
+          console.error('Error leyendo el archivo:', err);
+        };
+        reader.readAsArrayBuffer(blob);
       } else {
-        const fileBase64 = await FileSystem.readAsStringAsync(uri, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-        const workbook = XLSX.read(fileBase64, { type: 'base64' });
-        const wsname = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(sheet);
-        setExcelData(data);
+        const fileReaderInstance = await fetch(fileUri);
+        const arrayBuffer = await fileReaderInstance.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet);
+        setExcelData(json);
       }
     } catch (error) {
-      Alert.alert('Error', 'No se pudo leer el archivo');
-      console.log(error);
+      console.error('Error al seleccionar o procesar el archivo:', error);
     }
   };
 
-  const guardarEnFirestore = async () => {
+  const handleGuardar = async () => {
     try {
-      for (const producto of excelData) {
-        await addDoc(collection(db, 'productos'), {
-          nombre: producto.nombre || producto.Nombre || '',
-          precio: parseFloat(producto.precio || producto.Precio || 0),
-          stock: parseInt(producto.stock || producto.Stock || 0),
-        });
-      }
+      const batch = excelData.map(async (producto) => {
+        if (!producto.proveedor || !producto.nombre) {
+          throw new Error('Falta campo obligatorio: proveedor o nombre');
+        }
+        await addDoc(collection(db, 'stock'), producto);
+      });
 
-      Alert.alert('Éxito', 'Productos guardados en Firestore');
+      await Promise.all(batch);
+      Alert.alert('Éxito', 'Productos importados correctamente.');
       navigation.goBack();
     } catch (error) {
-      Alert.alert('Error', 'No se pudieron guardar los productos');
-      console.log(error);
+      console.error('Error al guardar productos:', error);
+      Alert.alert('Error', 'Hubo un problema al guardar los productos.');
     }
   };
 
   return (
-    <View style={{ flex: 1, padding: 20 }}>
-      <Button title="Seleccionar archivo Excel" onPress={handlePickExcel} />
+    <View style={{ flex: 1, padding: 16 }}>
+      <Button title="Seleccionar Archivo Excel" onPress={handlePickExcel} color="#2196F3" />
 
-      <View style={{ marginTop: 20 }}>
-        {excelData.length > 0 ? (
-          <>
-            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>Vista previa del Excel:</Text>
-            <FlatList
-              data={excelData}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <View style={{ borderBottomWidth: 1, paddingVertical: 5 }}>
-                  {Object.entries(item).map(([key, value]) => (
-                    <Text key={key}>{key}: {value}</Text>
-                  ))}
-                </View>
-              )}
-            />
-            <View style={{ marginTop: 20 }}>
-              <Button title="Guardar en Firestore" onPress={guardarEnFirestore} />
+      {excelData.length === 0 ? (
+        <Text style={{ marginVertical: 20 }}>No se ha seleccionado ningún archivo aún.</Text>
+      ) : (
+        <FlatList
+          data={excelData}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <View
+              style={{
+                padding: 10,
+                marginVertical: 5,
+                borderWidth: 1,
+                borderColor: '#ccc',
+                borderRadius: 5,
+              }}
+            >
+              <Text>Nombre: {item.nombre}</Text>
+              <Text>Descripción: {item.descripcion}</Text>
+              <Text>Compra: {item.precioCompra}</Text>
+              <Text>Venta: {item.precioVenta}</Text>
+              <Text>Stock: {item.stock}</Text>
+              <Text>Código de barras: {item.codigoBarras}</Text>
+              <Text>Proveedor: {item.proveedor}</Text>
+              <Text>Familia: {item.familia}</Text>
             </View>
-          </>
-        ) : (
-          <Text style={{ marginTop: 20 }}>No se ha seleccionado ningún archivo aún.</Text>
-        )}
-      </View>
+          )}
+        />
+      )}
+
+      {excelData.length > 0 && (
+        <Button title="Guardar" onPress={handleGuardar} color="#4CAF50" />
+      )}
 
       <View style={{ marginTop: 20 }}>
-        <Button title="Volver" onPress={() => navigation.goBack()} />
+        <Button title="Volver" onPress={() => navigation.goBack()} color="#2196F3" />
       </View>
     </View>
   );
