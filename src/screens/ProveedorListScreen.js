@@ -9,11 +9,19 @@ import {
   ActivityIndicator,
   TextInput,
   StatusBar,
+  Dimensions,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { getProveedores, deleteProveedor } from "../services/productService";
 import { Ionicons } from "@expo/vector-icons";
+
+// Obtener dimensiones iniciales
+const { width, height } = Dimensions.get('window');
+const isSmallDevice = width < 375;
+const isMediumDevice = width >= 375 && width < 768;
+const isTablet = width >= 768;
+const isLandscape = width > height;
 
 const ProveedorListScreen = ({ navigation }) => {
   const [proveedores, setProveedores] = useState([]);
@@ -22,8 +30,17 @@ const ProveedorListScreen = ({ navigation }) => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [deletingId, setDeletingId] = useState(null);
- 
+  const [dimensions, setDimensions] = useState({ width, height });
 
+  // Manejar cambios de orientación
+  useEffect(() => {
+    const updateDimensions = ({ window }) => {
+      setDimensions(window);
+    };
+    
+    const subscription = Dimensions.addEventListener('change', updateDimensions);
+    return () => subscription?.remove();
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -133,11 +150,26 @@ const ProveedorListScreen = ({ navigation }) => {
       <StatusBar translucent backgroundColor="transparent" />
       
       {/* Barra de búsqueda mejorada */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputContainer}>
-          <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+      <View style={[
+        styles.searchContainer,
+        isTablet && styles.tabletSearchContainer,
+        isLandscape && styles.landscapeSearchContainer
+      ]}>
+        <View style={[
+          styles.searchInputContainer,
+          isTablet && styles.tabletSearchInputContainer
+        ]}>
+          <Ionicons 
+            name="search" 
+            size={isTablet ? 24 : 20} 
+            color="#999" 
+            style={styles.searchIcon} 
+          />
           <TextInput
-            style={styles.searchInput}
+            style={[
+              styles.searchInput,
+              isTablet && styles.tabletSearchInput
+            ]}
             placeholder="Buscar por nombre, teléfono o email..."
             placeholderTextColor="#999"
             value={searchTerm}
@@ -148,10 +180,17 @@ const ProveedorListScreen = ({ navigation }) => {
         
         {searchTerm ? (
           <TouchableOpacity
-            style={styles.clearButton}
+            style={[
+              styles.clearButton,
+              isTablet && styles.tabletClearButton
+            ]}
             onPress={() => setSearchTerm("")}
           >
-            <Ionicons name="close-circle" size={24} color="#999" />
+            <Ionicons 
+              name="close-circle" 
+              size={isTablet ? 28 : 24} 
+              color="#999" 
+            />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -167,27 +206,51 @@ const ProveedorListScreen = ({ navigation }) => {
         <FlatList
           data={filteredProveedores}
           keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[
+            styles.listContent,
+            isTablet && styles.tabletListContent
+          ]}
           renderItem={({ item }) => (
-            <View style={styles.proveedorCard}>
+            <View style={[
+              styles.proveedorCard,
+              isTablet && styles.tabletProveedorCard,
+              isLandscape && styles.landscapeProveedorCard
+            ]}>
               <View style={styles.cardHeader}>
-                <Text style={styles.proveedorName}>{item.nombre}</Text>
+                <Text style={[
+                  styles.proveedorName,
+                  isTablet && styles.tabletProveedorName
+                ]}>{item.nombre}</Text>
                 <View style={styles.actionsContainer}>
                   <TouchableOpacity
                     onPress={() => navigation.navigate("EditProveedor", { proveedorId: item.id })}
-                    style={styles.editButton}
+                    style={[
+                      styles.editButton,
+                      isTablet && styles.tabletEditButton
+                    ]}
                   >
-                    <Ionicons name="pencil" size={18} color="white" />
+                    <Ionicons 
+                      name="pencil" 
+                      size={isTablet ? 22 : 18} 
+                      color="white" 
+                    />
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => handleDeleteProveedor(item.id)}
-                    style={styles.deleteButton}
+                    style={[
+                      styles.deleteButton,
+                      isTablet && styles.tabletDeleteButton
+                    ]}
                     disabled={deletingId === item.id}
                   >
                     {deletingId === item.id ? (
                       <ActivityIndicator size="small" color="white" />
                     ) : (
-                      <Ionicons name="trash" size={18} color="white" />
+                      <Ionicons 
+                        name="trash" 
+                        size={isTablet ? 22 : 18} 
+                        color="white" 
+                      />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -195,35 +258,75 @@ const ProveedorListScreen = ({ navigation }) => {
               
               {item.telefono && (
                 <View style={styles.detailRow}>
-                  <Ionicons name="call-outline" size={16} color="rgba(255,255,255,0.7)" style={styles.detailIcon} />
-                  <Text style={styles.detailValue}>{item.telefono}</Text>
+                  <Ionicons 
+                    name="call-outline" 
+                    size={isTablet ? 20 : 16} 
+                    color="rgba(255,255,255,0.7)" 
+                    style={styles.detailIcon} 
+                  />
+                  <Text style={[
+                    styles.detailValue,
+                    isTablet && styles.tabletDetailValue
+                  ]}>{item.telefono}</Text>
                 </View>
               )}
 
               {item.email && (
                 <View style={styles.detailRow}>
-                  <Ionicons name="mail-outline" size={16} color="rgba(255,255,255,0.7)" style={styles.detailIcon} />
-                  <Text style={styles.detailValue}>{item.email}</Text>
+                  <Ionicons 
+                    name="mail-outline" 
+                    size={isTablet ? 20 : 16} 
+                    color="rgba(255,255,255,0.7)" 
+                    style={styles.detailIcon} 
+                  />
+                  <Text style={[
+                    styles.detailValue,
+                    isTablet && styles.tabletDetailValue
+                  ]}>{item.email}</Text>
                 </View>
               )}
 
               {item.notas && (
                 <View style={styles.detailRow}>
-                  <Ionicons name="document-text-outline" size={16} color="rgba(255,255,255,0.7)" style={styles.detailIcon} />
-                  <Text style={styles.detailValue} numberOfLines={2}>{item.notas}</Text>
+                  <Ionicons 
+                    name="document-text-outline" 
+                    size={isTablet ? 20 : 16} 
+                    color="rgba(255,255,255,0.7)" 
+                    style={styles.detailIcon} 
+                  />
+                  <Text 
+                    style={[
+                      styles.detailValue,
+                      isTablet && styles.tabletDetailValue
+                    ]} 
+                    numberOfLines={isTablet ? 3 : 2}
+                  >
+                    {item.notas}
+                  </Text>
                 </View>
               )}
             </View>
           )}
+          numColumns={isLandscape ? 2 : 1}
+          columnWrapperStyle={isLandscape && styles.columnWrapper}
+          key={isLandscape ? 'two-column' : 'one-column'}
         />
       )}
       
       {/* Botón flotante de agregar */}
       <TouchableOpacity
-        style={styles.addButton}
+        style={[
+          styles.addButton,
+          isTablet && styles.tabletAddButton,
+          isLandscape && styles.landscapeAddButton
+        ]}
         onPress={() => navigation.navigate("AddProveedor")}
       >
-        <Ionicons name="add" size={24} color="white" />
+        <Ionicons 
+          name="add" 
+          size={isTablet ? 30 : 24} 
+          color="white" 
+        />
       </TouchableOpacity>
     </LinearGradient>
   );
@@ -236,9 +339,15 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flexDirection: 'row',
-    padding: 15,
-    paddingTop: 10,
+    padding: isTablet ? 20 : 15,
+    paddingTop: isTablet ? 15 : 10,
     alignItems: 'center',
+  },
+  tabletSearchContainer: {
+    paddingHorizontal: 30,
+  },
+  landscapeSearchContainer: {
+    paddingHorizontal: 15,
   },
   searchInputContainer: {
     flex: 1,
@@ -246,92 +355,141 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 10,
-    paddingHorizontal: 15,
-    marginTop:60,
+    paddingHorizontal: isTablet ? 20 : 15,
+    height: isTablet ? 50 : 40,
+    marginTop: isTablet ? 20 : 60,
+  },
+  tabletSearchInputContainer: {
+    height: 50,
+    marginTop: 20,
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: isTablet ? 15 : 10,
   },
   searchInput: {
     flex: 1,
     color: 'white',
-    height: 40,
+    height: isTablet ? 45 : 40,
+    fontSize: isTablet ? 18 : 16,
+  },
+  tabletSearchInput: {
+    fontSize: 18,
   },
   clearButton: {
-    marginLeft: 10,
+    marginLeft: isTablet ? 15 : 10,
     padding: 5,
-    marginTop:60,
+    marginTop: isTablet ? 20 : 60,
+  },
+  tabletClearButton: {
+    marginTop: 20,
   },
   listContent: {
     paddingBottom: 20,
   },
+  tabletListContent: {
+    paddingHorizontal: 10,
+  },
   proveedorCard: {
     backgroundColor: 'rgba(255,255,255,0.1)',
-    marginHorizontal: 15,
+    marginHorizontal: isTablet ? 20 : 15,
     marginBottom: 15,
-    padding: 15,
+    padding: isTablet ? 20 : 15,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
+  },
+  tabletProveedorCard: {
+    width: '90%',
+    alignSelf: 'center',
+  },
+  landscapeProveedorCard: {
+    width: '48%',
+    marginHorizontal: '1%',
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: isTablet ? 15 : 10,
   },
   proveedorName: {
-    fontSize: 18,
+    fontSize: isTablet ? 22 : 18,
     fontWeight: 'bold',
     color: 'white',
     flex: 1,
   },
+  tabletProveedorName: {
+    fontSize: 22,
+  },
   detailRow: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: isTablet ? 12 : 8,
     alignItems: 'center',
   },
   detailIcon: {
-    width: 24,
-    marginRight: 5,
+    width: isTablet ? 30 : 24,
+    marginRight: isTablet ? 10 : 5,
   },
   detailValue: {
     flex: 1,
     color: 'white',
+    fontSize: isTablet ? 16 : 14,
+  },
+  tabletDetailValue: {
+    fontSize: 16,
   },
   actionsContainer: {
     flexDirection: 'row',
   },
   editButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: isTablet ? 40 : 30,
+    height: isTablet ? 40 : 30,
+    borderRadius: isTablet ? 20 : 15,
     backgroundColor: '#4CAF50',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 10,
+    marginLeft: isTablet ? 15 : 10,
+  },
+  tabletEditButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   deleteButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: isTablet ? 40 : 30,
+    height: isTablet ? 40 : 30,
+    borderRadius: isTablet ? 20 : 15,
     backgroundColor: '#F44336',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 10,
+    marginLeft: isTablet ? 15 : 10,
+  },
+  tabletDeleteButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   addButton: {
     position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    bottom: isTablet ? 30 : 20,
+    right: isTablet ? 30 : 20,
+    width: isTablet ? 70 : 60,
+    height: isTablet ? 70 : 60,
+    borderRadius: isTablet ? 35 : 30,
     backgroundColor: '#4CAF50',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 5,
     zIndex: 1,
+  },
+  tabletAddButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+  },
+  landscapeAddButton: {
+    bottom: 15,
+    right: 15,
   },
   center: {
     flex: 1,
@@ -341,25 +499,31 @@ const styles = StyleSheet.create({
   loadingText: {
     color: 'white',
     marginTop: 10,
+    fontSize: isTablet ? 18 : 16,
   },
   errorText: {
     color: '#ff5252',
-    fontSize: 16,
+    fontSize: isTablet ? 18 : 16,
     marginBottom: 16,
     textAlign: 'center',
   },
   retryButton: {
     backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: 12,
+    padding: isTablet ? 15 : 12,
     borderRadius: 8,
   },
   retryButtonText: {
     color: 'white',
     fontWeight: 'bold',
+    fontSize: isTablet ? 18 : 16,
   },
   noProveedoresText: {
     color: 'rgba(255,255,255,0.7)',
-    fontSize: 16,
+    fontSize: isTablet ? 18 : 16,
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
   },
 });
 
