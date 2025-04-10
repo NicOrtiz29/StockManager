@@ -1,4 +1,4 @@
-import { getFirestore, collection, getDocs, query, where, addDoc, deleteDoc, doc, updateDoc, getDoc,writeBatch  } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, query, where, addDoc,limit , deleteDoc, doc, updateDoc, getDoc,writeBatch  } from 'firebase/firestore';
 import { app } from '../config/firebaseConfig';
 
 const db = getFirestore(app);
@@ -19,18 +19,21 @@ export const createProduct = async (product) => {
   }
 };
 
-// Obtener todos los productos con sus proveedores
-export const getProducts = async () => {
+export const getProducts = async (limite = 10) => {
   try {
-    // 1. Obtener todos los proveedores primero para optimizar
+    const db = getFirestore();
+
+    // Obtener proveedores
     const proveedoresSnapshot = await getDocs(collection(db, 'proveedores'));
     const proveedoresMap = {};
     proveedoresSnapshot.forEach(doc => {
       proveedoresMap[doc.id] = doc.data().nombre;
     });
 
-    // 2. Obtener todos los productos
-    const productosSnapshot = await getDocs(collection(db, 'productos'));
+    // Obtener los primeros N productos
+    const productosQuery = query(collection(db, 'productos'), limit(limite));
+    const productosSnapshot = await getDocs(productosQuery);
+
     const productos = productosSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
@@ -38,59 +41,37 @@ export const getProducts = async () => {
       stockMinimo: doc.data().stockMinimo !== undefined ? doc.data().stockMinimo : null
     }));
 
-    // 3. Obtener relaciones producto-proveedor y combinar datos
+    // Relacionar con proveedores
     const productosConProveedores = await Promise.all(
       productos.map(async (producto) => {
-        try {
-          const q = query(
-            collection(db, 'producto_proveedor'),
-            where('productoId', '==', producto.id)
-          );
-          const querySnapshot = await getDocs(q);
-          
-          const proveedoresIds = [];
-          querySnapshot.forEach(doc => {
-            proveedoresIds.push(doc.data().proveedorId);
-          });
+        const q = query(
+          collection(db, 'producto_proveedor'),
+          where('productoId', '==', producto.id)
+        );
+        const querySnapshot = await getDocs(q);
 
-          const proveedoresNombres = proveedoresIds.map(id => proveedoresMap[id] || `Proveedor ${id}`);
+        const proveedoresIds = [];
+        querySnapshot.forEach(doc => {
+          proveedoresIds.push(doc.data().proveedorId);
+        });
 
-          return {
-            ...producto,
-            proveedores: proveedoresNombres.length > 0 ? proveedoresNombres : [proveedoresMap[producto.proveedorId] || 'Sin proveedor'],
-            proveedorIds: proveedoresIds.length > 0 ? proveedoresIds : [producto.proveedorId].filter(Boolean)
-          };
-        } catch (error) {
-          console.error(`Error procesando producto ${producto.id}:`, error);
-          return {
-            ...producto,
-            proveedores: ['Error al cargar proveedores'],
-            proveedorIds: []
-          };
-        }
+        const proveedoresNombres = proveedoresIds.map(id => proveedoresMap[id] || `Proveedor ${id}`);
+
+        return {
+          ...producto,
+          proveedores: proveedoresNombres.length > 0 ? proveedoresNombres : [proveedoresMap[producto.proveedorId] || 'Sin proveedor'],
+          proveedorIds: proveedoresIds.length > 0 ? proveedoresIds : [producto.proveedorId].filter(Boolean)
+        };
       })
     );
 
-    // 4. Filtrar productos duplicados (mismo nombre y mismos proveedores)
-    const productosUnicos = productosConProveedores.filter((producto, index, self) => {
-      // Crear una clave única combinando nombre y proveedores
-      const claveUnica = `${producto.nombre.toLowerCase()}_${producto.proveedores.sort().join(',')}`;
-      
-      // Buscar si ya existe un producto con la misma clave
-      const primerIndice = self.findIndex(p => 
-        `${p.nombre.toLowerCase()}_${p.proveedores.sort().join(',')}` === claveUnica
-      );
-      
-      // Mantener solo el primer producto que coincide con esta clave
-      return primerIndice === index;
-    });
-
-    return productosUnicos;
+    return productosConProveedores;
   } catch (error) {
-    console.error('Error getting products:', error);
+    console.error('Error al obtener productos:', error);
     throw error;
   }
 };
+
 
 // Eliminar un producto
 export const deleteProduct = async (productId) => {

@@ -126,7 +126,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     width: '90%',
+    lineHeight: 16,
+    flexWrap: 'wrap',
   },
+  
 });
 
 export default MainMenuScreen;
