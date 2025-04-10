@@ -54,26 +54,35 @@ export default function ImportExcelScreen({ navigation }) {
       Alert.alert('Error', 'No hay datos para guardar');
       return;
     }
-
+  
     try {
       const productosRef = collection(db, 'productos');
-
+  
       for (const producto of excelData) {
         const nombre = producto.nombre || producto.Nombre || '';
-        const precio = parseFloat(producto.precio || producto.Precio || 0);
-        const stock = parseInt(producto.stock || producto.Stock || 0);
-        const proveedor = producto.proveedor || producto.Proveedor || '';
-
-        if (!proveedor) continue; // Salta si el proveedor no está
-
+        const descripcion = producto.descripcion || producto.Descripcion || '';
+        const precioCompra = parseFloat(producto.precioCompra || 0);
+        const precioVenta = parseFloat(producto.precioVenta || 0);
+        const stock = parseInt(producto.stock || 0);
+        const codigoBarras = producto.codigoBarras || '';
+        const proveedor = producto.proveedor || '';
+        const familia = producto.familia || '';
+  
+        // Asegurarse que el proveedor esté presente
+        if (!proveedor) continue;
+  
         await addDoc(productosRef, {
           nombre,
-          precio,
+          descripcion,
+          precioCompra,
+          precioVenta,
           stock,
+          codigoBarras,
           proveedor,
+          familia,
         });
       }
-
+  
       Alert.alert('Éxito', 'Productos guardados en Firestore');
       setExcelData([]);
       navigation.goBack();
@@ -82,6 +91,7 @@ export default function ImportExcelScreen({ navigation }) {
       Alert.alert('Error', 'No se pudieron guardar los productos.');
     }
   };
+  
 
   return (
     <View style={{ flex: 1, padding: 20 }}>
