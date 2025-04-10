@@ -12,7 +12,7 @@ import {
   StatusBar,
   BackHandler,
   Dimensions,
-  ScrollView
+  ScrollView,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -26,7 +26,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 // Obtener dimensiones iniciales
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 const isSmallDevice = width < 375;
 const isMediumDevice = width >= 375 && width < 768;
 const isTablet = width >= 768;
@@ -50,8 +50,11 @@ const ProductListScreen = ({ navigation }) => {
     const updateDimensions = ({ window }) => {
       setDimensions(window);
     };
-    
-    const subscription = Dimensions.addEventListener('change', updateDimensions);
+
+    const subscription = Dimensions.addEventListener(
+      "change",
+      updateDimensions
+    );
     return () => subscription?.remove();
   }, []);
 
@@ -217,18 +220,22 @@ const ProductListScreen = ({ navigation }) => {
   };
 
   const renderProductItem = ({ item }) => (
-    <View style={[
-      styles.productCard,
-      isTablet && styles.tabletProductCard,
-      isLandscape && styles.landscapeProductCard
-    ]}>
+    <View
+      style={[
+        styles.productCard,
+        isTablet && styles.tabletProductCard,
+        isLandscape && styles.landscapeProductCard,
+      ]}
+    >
       <View style={styles.cardHeader}>
-        <Text style={[
-          styles.productName,
-          isSmallDevice && styles.smallDeviceProductName,
-          isMediumDevice && styles.mediumDeviceProductName,
-          isTablet && styles.tabletProductName
-        ]}>
+        <Text
+          style={[
+            styles.productName,
+            isSmallDevice && styles.smallDeviceProductName,
+            isMediumDevice && styles.mediumDeviceProductName,
+            isTablet && styles.tabletProductName,
+          ]}
+        >
           {item.nombre}
         </Text>
         <View style={styles.actionsContainer}>
@@ -238,37 +245,40 @@ const ProductListScreen = ({ navigation }) => {
             }
             style={styles.editButton}
           >
-            <Ionicons 
-              name="pencil" 
-              size={isTablet ? 22 : isSmallDevice ? 16 : 18} 
-              color="white" 
+            <Ionicons
+              name="pencil"
+              size={isTablet ? 22 : isSmallDevice ? 16 : 18}
+              color="white"
             />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => handleDeleteProduct(item.id)}
             style={styles.deleteButton}
           >
-            <Ionicons 
-              name="trash" 
-              size={isTablet ? 22 : isSmallDevice ? 16 : 18} 
-              color="white" 
+            <Ionicons
+              name="trash"
+              size={isTablet ? 22 : isSmallDevice ? 16 : 18}
+              color="white"
             />
           </TouchableOpacity>
         </View>
       </View>
 
       {item.descripcion && (
-        <Text style={[
-          styles.description,
-          isTablet && styles.tabletDescription
-        ]}>{item.descripcion}</Text>
+        <Text
+          style={[styles.description, isTablet && styles.tabletDescription]}
+        >
+          {item.descripcion}
+        </Text>
       )}
 
-      <View style={[
-        styles.detailsContainer,
-        isTablet && styles.tabletDetailsContainer,
-        isLandscape && styles.landscapeDetailsContainer
-      ]}>
+      <View
+        style={[
+          styles.detailsContainer,
+          isTablet && styles.tabletDetailsContainer,
+          isLandscape && styles.landscapeDetailsContainer,
+        ]}
+      >
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Precio:</Text>
           <Text style={styles.detailValue}>${item.precioVenta}</Text>
@@ -283,7 +293,7 @@ const ProductListScreen = ({ navigation }) => {
                 item.stockMinimo !== null &&
                   item.stock < item.stockMinimo &&
                   styles.lowStock,
-                isTablet && styles.tabletDetailValue
+                isTablet && styles.tabletDetailValue,
               ]}
             >
               {item.stock}
@@ -302,10 +312,9 @@ const ProductListScreen = ({ navigation }) => {
         {item.familiaId && (
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Familia:</Text>
-            <Text style={[
-              styles.detailValue,
-              isTablet && styles.tabletDetailValue
-            ]}>
+            <Text
+              style={[styles.detailValue, isTablet && styles.tabletDetailValue]}
+            >
               {familias.find((f) => f.id === item.familiaId)?.nombre ||
                 "Sin familia"}
             </Text>
@@ -315,35 +324,51 @@ const ProductListScreen = ({ navigation }) => {
         {item.codigoBarras && (
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Código:</Text>
-            <Text style={[
-              styles.detailValue,
-              isTablet && styles.tabletDetailValue
-            ]}>{item.codigoBarras}</Text>
+            <Text
+              style={[styles.detailValue, isTablet && styles.tabletDetailValue]}
+            >
+              {item.codigoBarras}
+            </Text>
+          </View>
+        )}
+        {item.proveedor && (
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Proveedor:</Text>
+            <Text
+              style={[styles.detailValue, isTablet && styles.tabletDetailValue]}
+            >
+              {item.proveedor.nombre || item.proveedor}{" "}
+              {/* Ajusta según cómo venga el dato */}
+            </Text>
           </View>
         )}
       </View>
 
       <View style={styles.cartControls}>
         {selectedProduct === item.id ? (
-          <View style={[
-            styles.quantityControls,
-            isTablet && styles.tabletQuantityControls
-          ]}>
+          <View
+            style={[
+              styles.quantityControls,
+              isTablet && styles.tabletQuantityControls,
+            ]}
+          >
             <TouchableOpacity
               onPress={() => handleCartAction(item, "remove")}
               style={styles.controlButton}
             >
-              <Ionicons 
-                name="remove" 
-                size={isTablet ? 24 : 20} 
-                color="#FF9800" 
+              <Ionicons
+                name="remove"
+                size={isTablet ? 24 : 20}
+                color="#FF9800"
               />
             </TouchableOpacity>
 
-            <Text style={[
-              styles.quantityText,
-              isTablet && styles.tabletQuantityText
-            ]}>
+            <Text
+              style={[
+                styles.quantityText,
+                isTablet && styles.tabletQuantityText,
+              ]}
+            >
               {cart.find((p) => p.id === item.id)?.quantity || 0}
             </Text>
 
@@ -406,15 +431,19 @@ const ProductListScreen = ({ navigation }) => {
       <StatusBar translucent backgroundColor="transparent" />
 
       {/* Barra de búsqueda */}
-      <View style={[
-        styles.searchContainer,
-        isTablet && styles.tabletSearchContainer,
-        isLandscape && styles.landscapeSearchContainer
-      ]}>
-        <View style={[
-          styles.searchInputContainer,
-          isTablet && styles.tabletSearchInputContainer
-        ]}>
+      <View
+        style={[
+          styles.searchContainer,
+          isTablet && styles.tabletSearchContainer,
+          isLandscape && styles.landscapeSearchContainer,
+        ]}
+      >
+        <View
+          style={[
+            styles.searchInputContainer,
+            isTablet && styles.tabletSearchInputContainer,
+          ]}
+        >
           <Ionicons
             name="search"
             size={isTablet ? 24 : isSmallDevice ? 18 : 20}
@@ -422,10 +451,7 @@ const ProductListScreen = ({ navigation }) => {
             style={styles.searchIcon}
           />
           <TextInput
-            style={[
-              styles.searchInput,
-              isTablet && styles.tabletSearchInput
-            ]}
+            style={[styles.searchInput, isTablet && styles.tabletSearchInput]}
             placeholder="Buscar por nombre o código..."
             placeholderTextColor="#999"
             value={searchTerm}
@@ -435,10 +461,7 @@ const ProductListScreen = ({ navigation }) => {
         </View>
 
         <TouchableOpacity
-          style={[
-            styles.scanButton,
-            isTablet && styles.tabletScanButton
-          ]}
+          style={[styles.scanButton, isTablet && styles.tabletScanButton]}
           onPress={() =>
             navigation.navigate("BarcodeScanner", {
               mode: "search",
@@ -449,10 +472,10 @@ const ProductListScreen = ({ navigation }) => {
             })
           }
         >
-          <Ionicons 
-            name="barcode-outline" 
-            size={isTablet ? 28 : isSmallDevice ? 20 : 24} 
-            color="white" 
+          <Ionicons
+            name="barcode-outline"
+            size={isTablet ? 28 : isSmallDevice ? 20 : 24}
+            color="white"
           />
         </TouchableOpacity>
       </View>
@@ -468,14 +491,18 @@ const ProductListScreen = ({ navigation }) => {
           keyExtractor={(item) => item.id}
           contentContainerStyle={[
             styles.listContent,
-            isTablet && styles.tabletListContent
+            isTablet && styles.tabletListContent,
           ]}
           renderItem={renderProductItem}
           numColumns={isTablet ? (isLandscape ? 3 : 2) : 1}
-          columnWrapperStyle={
-            (isTablet || isLandscape) && styles.columnWrapper
+          columnWrapperStyle={(isTablet || isLandscape) && styles.columnWrapper}
+          key={
+            isTablet
+              ? isLandscape
+                ? "three-column"
+                : "two-column"
+              : "one-column"
           }
-          key={(isTablet ? (isLandscape ? 'three-column' : 'two-column') : 'one-column')}
         />
       )}
 
@@ -485,7 +512,7 @@ const ProductListScreen = ({ navigation }) => {
           style={[
             styles.floatingCart,
             isTablet && styles.tabletFloatingCart,
-            isLandscape && styles.landscapeFloatingCart
+            isLandscape && styles.landscapeFloatingCart,
           ]}
           onPress={() =>
             navigation.navigate("CartScreen", {
@@ -494,10 +521,10 @@ const ProductListScreen = ({ navigation }) => {
             })
           }
         >
-          <Ionicons 
-            name="cart" 
-            size={isTablet ? 32 : isLandscape ? 28 : 24} 
-            color="white" 
+          <Ionicons
+            name="cart"
+            size={isTablet ? 32 : isLandscape ? 28 : 24}
+            color="white"
           />
           <View style={styles.cartBadge}>
             <Text style={styles.cartBadgeText}>
@@ -515,47 +542,45 @@ const ProductListScreen = ({ navigation }) => {
             style={[
               styles.modalContent,
               isTablet && styles.tabletModalContent,
-              isLandscape && styles.landscapeModalContent
+              isLandscape && styles.landscapeModalContent,
             ]}
           >
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowFamiliaModal(false)}
             >
-              <Ionicons 
-                name="close" 
-                size={isTablet ? 28 : 24} 
-                color="white" 
-              />
+              <Ionicons name="close" size={isTablet ? 28 : 24} color="white" />
             </TouchableOpacity>
 
-            <Text style={[
-              styles.modalTitle,
-              isTablet && styles.tabletModalTitle
-            ]}>Nueva Familia</Text>
+            <Text
+              style={[styles.modalTitle, isTablet && styles.tabletModalTitle]}
+            >
+              Nueva Familia
+            </Text>
 
             <TextInput
               placeholder="Nombre de la familia (ej: Aceites)"
               placeholderTextColor="#aaa"
               value={newFamiliaNombre}
               onChangeText={setNewFamiliaNombre}
-              style={[
-                styles.modalInput,
-                isTablet && styles.tabletModalInput
-              ]}
+              style={[styles.modalInput, isTablet && styles.tabletModalInput]}
             />
 
             <TouchableOpacity
               style={[
                 styles.createButton,
-                isTablet && styles.tabletCreateButton
+                isTablet && styles.tabletCreateButton,
               ]}
               onPress={handleCreateFamilia}
             >
-              <Text style={[
-                styles.createButtonText,
-                isTablet && styles.tabletCreateButtonText
-              ]}>Crear Familia</Text>
+              <Text
+                style={[
+                  styles.createButtonText,
+                  isTablet && styles.tabletCreateButtonText,
+                ]}
+              >
+                Crear Familia
+              </Text>
             </TouchableOpacity>
           </LinearGradient>
         </View>
@@ -653,11 +678,11 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.2)",
   },
   tabletProductCard: {
-    width: '90%',
-    alignSelf: 'center',
+    width: "90%",
+    alignSelf: "center",
   },
   landscapeProductCard: {
-    width: isLandscape ? '30%' : 'auto',
+    width: isLandscape ? "30%" : "auto",
     marginHorizontal: isLandscape ? 10 : 15,
   },
   cardHeader: {
@@ -693,18 +718,18 @@ const styles = StyleSheet.create({
     marginTop: isTablet ? 12 : isSmallDevice ? 5 : 8,
   },
   tabletDetailsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   landscapeDetailsContainer: {
-    flexDirection: 'column',
+    flexDirection: "column",
   },
   detailRow: {
     flexDirection: "row",
     marginBottom: isTablet ? 12 : isSmallDevice ? 6 : 8,
     alignItems: "center",
-    minWidth: isTablet ? '48%' : '100%',
+    minWidth: isTablet ? "48%" : "100%",
   },
   detailLabel: {
     width: isTablet ? 120 : 80,
@@ -757,7 +782,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   columnWrapper: {
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     paddingHorizontal: 10,
   },
   modalContainer: {
@@ -767,18 +792,18 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalContent: {
-    width: isTablet ? '60%' : '80%',
+    width: isTablet ? "60%" : "80%",
     padding: isTablet ? 25 : 20,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.2)",
   },
   tabletModalContent: {
-    width: '50%',
+    width: "50%",
     padding: 30,
   },
   landscapeModalContent: {
-    width: '40%',
+    width: "40%",
   },
   closeButton: {
     alignSelf: "flex-end",
