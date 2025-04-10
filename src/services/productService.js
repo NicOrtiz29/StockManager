@@ -34,9 +34,7 @@ export const getProducts = async () => {
     const productos = productosSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
-      // Convertir código de barras a string para el frontend (o null)
       codigoBarras: doc.data().codigoBarras?.toString() || null,
-      // Manejar stockMinimo correctamente
       stockMinimo: doc.data().stockMinimo !== undefined ? doc.data().stockMinimo : null
     }));
 
@@ -44,7 +42,6 @@ export const getProducts = async () => {
     const productosConProveedores = await Promise.all(
       productos.map(async (producto) => {
         try {
-          // Obtener relaciones para este producto
           const q = query(
             collection(db, 'producto_proveedor'),
             where('productoId', '==', producto.id)
@@ -56,7 +53,6 @@ export const getProducts = async () => {
             proveedoresIds.push(doc.data().proveedorId);
           });
 
-          // Mapear IDs a nombres de proveedores
           const proveedoresNombres = proveedoresIds.map(id => proveedoresMap[id] || `Proveedor ${id}`);
 
           return {
@@ -75,7 +71,21 @@ export const getProducts = async () => {
       })
     );
 
-    return productosConProveedores;
+    // 4. Filtrar productos duplicados (mismo nombre y mismos proveedores)
+    const productosUnicos = productosConProveedores.filter((producto, index, self) => {
+      // Crear una clave única combinando nombre y proveedores
+      const claveUnica = `${producto.nombre.toLowerCase()}_${producto.proveedores.sort().join(',')}`;
+      
+      // Buscar si ya existe un producto con la misma clave
+      const primerIndice = self.findIndex(p => 
+        `${p.nombre.toLowerCase()}_${p.proveedores.sort().join(',')}` === claveUnica
+      );
+      
+      // Mantener solo el primer producto que coincide con esta clave
+      return primerIndice === index;
+    });
+
+    return productosUnicos;
   } catch (error) {
     console.error('Error getting products:', error);
     throw error;
