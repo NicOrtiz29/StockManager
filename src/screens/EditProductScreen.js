@@ -273,14 +273,22 @@ const EditProductScreen = ({ route, navigation }) => {
               placeholder="Código de Barras (opcional)"
               placeholderTextColor="#aaa"
               value={codigoBarras}
-              onChangeText={(text) => setCodigoBarras(text.replace(/[^0-9]/g, ""))}
+              onChangeText={(text) =>
+                setCodigoBarras(text.replace(/[^0-9]/g, ""))
+              }
               keyboardType="numeric"
               style={[styles.input, styles.barcodeInput]}
               maxLength={13}
             />
+           
             <TouchableOpacity
               onPress={() =>
-                navigation.navigate("BarcodeScanner", { mode: "edit" })
+                navigation.navigate("BarcodeScanner", {
+                  mode: "edit",
+                  onBarcodeScanned: (barcode) => {
+                    setCodigoBarras(barcode);
+                  },
+                })
               }
               style={styles.scanButton}
             >

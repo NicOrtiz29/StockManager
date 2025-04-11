@@ -466,8 +466,9 @@ const ProductListScreen = ({ navigation }) => {
             navigation.navigate("BarcodeScanner", {
               mode: "search",
               onBarcodeScanned: (codigo) => {
-                setSearchTerm(codigo);
-                setTimeout(() => handleSearch(), 300);
+                navigation.goBack(); // Primero regresamos
+                setSearchTerm(codigo); // Luego actualizamos el estado
+                setTimeout(() => handleSearch(), 100); // Pequeño delay para asegurar
               },
             })
           }

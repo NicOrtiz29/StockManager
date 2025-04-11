@@ -1,9 +1,8 @@
-// src/config/firebaseConfig.js
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBhInymqBkQ3hyw90CC8uuX7dOqEySw2DU",
@@ -14,20 +13,26 @@ const firebaseConfig = {
   appId: "1:887170478122:web:c6ee5ef6d981c1b624d353"
 };
 
-// Inicializar Firebase
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// ⚠️ Autenticación compatible con web y móvil
+// Initialize Authentication
 let auth;
+
 if (Platform.OS === 'web') {
-  auth = getAuth(app); // Web no necesita persistencia personalizada
+  auth = getAuth(app);
 } else {
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(ReactNativeAsyncStorage),
-  });
+  try {
+    auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage)
+    });
+  } catch (error) {
+    console.error('Error initializing auth:', error);
+    auth = getAuth(app);
+  }
 }
 
-// Inicializar Firestore
+// Initialize Firestore
 const db = getFirestore(app);
 
 export { app, auth, db };

@@ -119,29 +119,61 @@ export const getProductById = async (productId) => {
     const productRef = doc(db, 'productos', productId);
     const productSnap = await getDoc(productRef);
     
-    if (productSnap.exists()) {
-      const data = productSnap.data();
-      return {
-        id: productSnap.id,
-        nombre: data.nombre || '',
-        descripcion: data.descripcion || '',
-        precioVenta: data.precioVenta || 0,
-        precioCompra: data.precioCompra || 0,
-        stock: data.stock || 0,
-        stockMinimo: data.stockMinimo !== undefined ? data.stockMinimo : null,
-        codigoBarras: data.codigoBarras?.toString() || '', // Convertir a string vacío si es null/undefined
-        proveedorId: data.proveedorId || '',
-        familiaId: data.familiaId || '', // Agregado el campo familiaId
-        createdAt: data.createdAt?.toDate() || null
-      };
-    } else {
+    if (!productSnap.exists()) {
       throw new Error('Producto no encontrado');
     }
+
+    const data = productSnap.data();
+
+    // Obtener proveedores asociados (de producto_proveedor)
+    const proveedoresQuery = query(
+      collection(db, 'producto_proveedor'),
+      where('productoId', '==', productId)
+    );
+    const proveedoresSnapshot = await getDocs(proveedoresQuery);
+    const proveedorIds = proveedoresSnapshot.docs.map(doc => doc.data().proveedorId);
+
+    // Obtener nombres de proveedores
+    const proveedoresNombres = [];
+    for (const id of proveedorIds) {
+      const provRef = doc(db, 'proveedores', id);
+      const provSnap = await getDoc(provRef);
+      if (provSnap.exists()) {
+        proveedoresNombres.push(provSnap.data().nombre);
+      }
+    }
+
+    // Obtener nombre de la familia si existe
+    let familiaNombre = '';
+    if (data.familiaId) {
+      const familiaRef = doc(db, 'familias', data.familiaId);
+      const familiaSnap = await getDoc(familiaRef);
+      if (familiaSnap.exists()) {
+        familiaNombre = familiaSnap.data().nombre;
+      }
+    }
+
+    return {
+      id: productSnap.id,
+      nombre: data.nombre || '',
+      descripcion: data.descripcion || '',
+      precioVenta: data.precioVenta || 0,
+      precioCompra: data.precioCompra || 0,
+      stock: data.stock || 0,
+      stockMinimo: data.stockMinimo !== undefined ? data.stockMinimo : null,
+      codigoBarras: data.codigoBarras?.toString() || '',
+      proveedorIds: proveedorIds.length > 0 ? proveedorIds : [data.proveedorId].filter(Boolean),
+      proveedores: proveedoresNombres.length > 0 ? proveedoresNombres : ['Sin proveedor'],
+      familiaId: data.familiaId || '',
+      familiaNombre: familiaNombre || 'Sin familia',
+      createdAt: data.createdAt?.toDate() || null
+    };
   } catch (error) {
     console.error("Error getting product by ID:", error);
     throw error;
   }
 };
+
 
 
 // Actualizar un producto

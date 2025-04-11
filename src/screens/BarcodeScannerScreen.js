@@ -27,27 +27,56 @@ export default function BarcodeScannerScreen({ navigation, route }) {
     if (scanned) return;
     setScanned(true);
     setLoading(true);
-
+  
     try {
-      if (onBarcodeScanned) {
-        onBarcodeScanned(data);
+      // Modo edición o callback personalizado
+      if (route.params?.onBarcodeScanned) {
+        route.params.onBarcodeScanned(data);
         await new Promise(resolve => setTimeout(resolve, 300));
         navigation.goBack();
         return;
       }
-
-      // Si no hay función de escaneo externa, podrías buscar en Firebase
-      const q = query(collection(db, 'productos'), where('codigo', '==', data));
+  
+      // Modo búsqueda (validar existencia)
+      const q = query(
+        collection(db, 'productos'), 
+        where('codigoBarras', '==', Number(data)) // Asegúrate que coincide con tu campo en Firestore
+      );
       const querySnapshot = await getDocs(q);
-
+  
       if (!querySnapshot.empty) {
-        const producto = querySnapshot.docs[0].data();
-        Alert.alert('Producto encontrado', `Nombre: ${producto.nombre}`);
-        // Podrías redirigir a otra pantalla si querés
+        const doc = querySnapshot.docs[0];
+        const producto = {
+          id: doc.id,
+          ...doc.data(),
+          codigoBarras: doc.data().codigoBarras?.toString() || ''
+        };
+        
+        if (route.params?.mode === "search") {
+          // Navegar a detalles del producto encontrado
+          navigation.navigate("ProductDetail", { productId: doc.id });
+        } else {
+          // Mostrar alerta informativa
+          Alert.alert('Producto encontrado', `Nombre: ${producto.nombre}`);
+        }
       } else {
-        Alert.alert('No encontrado', 'El código no se encuentra en la base de datos.');
+        if (route.params?.mode === "create") {
+          // Si estamos creando un nuevo producto, usar el código
+          navigation.navigate("CreateProduct", { codigoBarras: data });
+        } else {
+          Alert.alert(
+            'No encontrado', 
+            '¿Deseas crear un nuevo producto con este código?',
+            [
+              { text: "Cancelar" },
+              { 
+                text: "Crear", 
+                onPress: () => navigation.navigate("CreateProduct", { codigoBarras: data }) 
+              }
+            ]
+          );
+        }
       }
-
     } catch (error) {
       Alert.alert('Error', 'Error al procesar el código');
       console.error(error);
