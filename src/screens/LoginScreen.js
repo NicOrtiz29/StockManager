@@ -66,7 +66,7 @@ const LoginScreen = () => {
                 resizeMode="contain"
               />
 
-              <Text style={styles.title}>TLN AUTORRADIO</Text>
+              {/*<Text style={styles.title}>TLN AUTORRADIO</Text>*/}
               <Text style={styles.subtitle}>Iniciar Sesión</Text>
 
               {error && (
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     padding: width < 400 ? 20 : 30,
   },
   logo: {
-    width: width < 400 ? width * 0.5 : 150,
+    width: width < 400 ? width * 0.5 : 290,
     height: width < 400 ? width * 0.5 : 150,
     marginBottom: 20,
   },

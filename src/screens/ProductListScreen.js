@@ -81,6 +81,11 @@ const ProductListScreen = ({ navigation }) => {
       console.error("Error loading familias:", error);
     }
   };
+  useEffect(() => {
+    if (searchTerm) {
+      handleSearch();
+    }
+  }, [searchTerm]);
 
   useEffect(() => {
     if (searchTerm) {
@@ -466,9 +471,8 @@ const ProductListScreen = ({ navigation }) => {
             navigation.navigate("BarcodeScanner", {
               mode: "search",
               onBarcodeScanned: (codigo) => {
-                navigation.goBack(); // Primero regresamos
-                setSearchTerm(codigo); // Luego actualizamos el estado
-                setTimeout(() => handleSearch(), 100); // Pequeño delay para asegurar
+                setSearchTerm(codigo); // Actualizamos el estado directamente
+                // No necesitamos navigation.goBack() ni setTimeout
               },
             })
           }
