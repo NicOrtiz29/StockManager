@@ -54,7 +54,11 @@ const EditProductScreen = ({ route, navigation }) => {
         setPrecioVenta(product.precioVenta?.toString() || "");
         setPrecioCompra(product.precioCompra?.toString() || "");
         setStock(product.stock.toString());
-        setProveedorId(product.proveedorId || "");
+        setProveedorId(
+          product.proveedorIds?.length > 0 
+            ? product.proveedorIds[0] 
+            : product.proveedorId || ""
+        );
         setFamiliaId(product.familiaId || "");
         setCodigoBarras(
           product.codigoBarras !== null && product.codigoBarras !== undefined
