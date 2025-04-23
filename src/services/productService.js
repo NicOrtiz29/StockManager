@@ -1,4 +1,4 @@
-import { getFirestore, collection, getDocs, query, where, addDoc,limit , deleteDoc, doc, updateDoc, getDoc,writeBatch  } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, query, where, addDoc,limit , deleteDoc, doc, updateDoc, getDoc,writeBatch,orderBy, startAfter  } from 'firebase/firestore';
 import { app } from '../config/firebaseConfig';
 
 const db = getFirestore(app);
@@ -19,7 +19,9 @@ export const createProduct = async (product) => {
   }
 };
 
-export const getProducts = async (limite = 10) => {
+// ... (todo el código anterior se mantiene igual)
+
+export const getProducts = async (limite = 10, ultimoVisible = null) => {
   try {
     const db = getFirestore();
 
@@ -30,9 +32,27 @@ export const getProducts = async (limite = 10) => {
       proveedoresMap[doc.id] = doc.data().nombre;
     });
 
-    // Obtener los primeros N productos
-    const productosQuery = query(collection(db, 'productos'), limit(limite));
+    // Construir la consulta con paginación
+    let productosQuery;
+    if (ultimoVisible) {
+      productosQuery = query(
+        collection(db, 'productos'),
+        orderBy('nombre'), // Ordenamos por nombre para consistencia en la paginación
+        startAfter(ultimoVisible),
+        limit(limite)
+      );
+    } else {
+      productosQuery = query(
+        collection(db, 'productos'),
+        orderBy('nombre'),
+        limit(limite)
+      );
+    }
+
     const productosSnapshot = await getDocs(productosQuery);
+
+    
+    const ultimoDoc = productosSnapshot.docs[productosSnapshot.docs.length - 1];
 
     const productos = productosSnapshot.docs.map(doc => ({
       id: doc.id,
@@ -65,12 +85,17 @@ export const getProducts = async (limite = 10) => {
       })
     );
 
-    return productosConProveedores;
+    return {
+      productos: productosConProveedores,
+      ultimoVisible: ultimoDoc
+    };
   } catch (error) {
     console.error('Error al obtener productos:', error);
     throw error;
   }
 };
+
+
 
 
 // Eliminar un producto

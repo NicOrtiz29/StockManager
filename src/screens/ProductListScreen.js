@@ -44,6 +44,10 @@ const ProductListScreen = ({ navigation }) => {
   const [cart, setCart] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [dimensions, setDimensions] = useState({ width, height });
+  const [ultimoVisible, setUltimoVisible] = useState(null);
+  const [cargandoMas, setCargandoMas] = useState(false);
+  const [hayMasProductos, setHayMasProductos] = useState(true);
+  const [refrescando, setRefrescando] = useState(false);
 
   // Manejar cambios de orientación
   useEffect(() => {
@@ -58,19 +62,48 @@ const ProductListScreen = ({ navigation }) => {
     return () => subscription?.remove();
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (limite = 10, reset = false) => {
     try {
-      setLoading(true);
+      if (reset) {
+        setLoading(true);
+        setUltimoVisible(null);
+        setHayMasProductos(true);
+      }
+
       setError(null);
-      const productos = await getProducts();
-      setProducts(productos);
-      setFilteredProducts(productos);
+      const { productos, ultimoVisible: nuevoUltimoVisible } =
+        await getProducts(limite, reset ? null : ultimoVisible);
+
+      if (reset) {
+        setProducts(productos);
+        setFilteredProducts(productos);
+      } else {
+        setProducts((prev) => [...prev, ...productos]);
+        setFilteredProducts((prev) => [...prev, ...productos]);
+      }
+
+      setUltimoVisible(nuevoUltimoVisible);
+      setHayMasProductos(productos.length >= limite);
     } catch (error) {
       console.error("Error cargando productos:", error);
       setError("Error al cargar los productos");
     } finally {
       setLoading(false);
+      setRefrescando(false);
+      setCargandoMas(false);
     }
+  };
+
+  const cargarMasProductos = () => {
+    if (!cargandoMas && hayMasProductos) {
+      setCargandoMas(true);
+      fetchData(10, false);
+    }
+  };
+
+  const handleRefresh = () => {
+    setRefrescando(true);
+    fetchData(10, true);
   };
 
   const loadFamilias = async () => {
@@ -81,6 +114,7 @@ const ProductListScreen = ({ navigation }) => {
       console.error("Error loading familias:", error);
     }
   };
+
   useEffect(() => {
     if (searchTerm) {
       handleSearch();
@@ -222,6 +256,17 @@ const ProductListScreen = ({ navigation }) => {
         return prevCart.filter((item) => item.id !== product.id);
       }
     });
+  };
+
+  const renderFooter = () => {
+    if (!cargandoMas) return null;
+
+    return (
+      <View style={styles.footer}>
+        <ActivityIndicator size="small" color="white" />
+        <Text style={styles.footerText}>Cargando más productos...</Text>
+      </View>
+    );
   };
 
   const renderProductItem = ({ item }) => (
@@ -508,6 +553,11 @@ const ProductListScreen = ({ navigation }) => {
                 : "two-column"
               : "one-column"
           }
+          onEndReached={cargarMasProductos}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={renderFooter}
+          refreshing={refrescando}
+          onRefresh={handleRefresh}
         />
       )}
 
@@ -920,6 +970,17 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 12,
     fontWeight: "bold",
+  },
+  footer: {
+    padding: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+  },
+  footerText: {
+    color: "white",
+    marginLeft: 10,
+    fontSize: isTablet ? 16 : 14,
   },
 });
 
