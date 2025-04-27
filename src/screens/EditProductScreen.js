@@ -30,8 +30,8 @@ const EditProductScreen = ({ route, navigation }) => {
   const [precioCompra, setPrecioCompra] = useState("");
   const [porcentajeAumento, setPorcentajeAumento] = useState("30");
   const [stock, setStock] = useState("");
-  const [proveedorId, setProveedorId] = useState("");
-  const [familiaId, setFamiliaId] = useState("");
+  const [proveedorId, setProveedorId] = useState(null);
+  const [familiaId, setFamiliaId] = useState(null);
   const [proveedores, setProveedores] = useState([]);
   const [familias, setFamilias] = useState([]);
   const [mostrarCalculadora, setMostrarCalculadora] = useState(false);
@@ -39,36 +39,51 @@ const EditProductScreen = ({ route, navigation }) => {
   const [initialLoad, setInitialLoad] = useState(true);
   const [codigoBarras, setCodigoBarras] = useState("");
   const [stockMinimo, setStockMinimo] = useState("");
+  const [dataLoaded, setDataLoaded] = useState(false); // Nuevo estado para controlar carga
 
   useEffect(() => {
     const loadData = async () => {
       try {
+        setInitialLoad(true);
         const [product, proveedoresData, familiasData] = await Promise.all([
           getProductById(productId),
           getProveedores(),
           getFamilias(),
         ]);
 
+
+        // Primero establecer los datos básicos
         setNombre(product.nombre);
         setDescripcion(product.descripcion);
         setPrecioVenta(product.precioVenta?.toString() || "");
         setPrecioCompra(product.precioCompra?.toString() || "");
         setStock(product.stock.toString());
-        setProveedorId(
-          product.proveedorIds?.length > 0 
-            ? product.proveedorIds[0] 
-            : product.proveedorId || ""
-        );
-        setFamiliaId(product.familiaId || "");
         setCodigoBarras(
           product.codigoBarras !== null && product.codigoBarras !== undefined
             ? product.codigoBarras.toString()
             : ""
         );
-        setStockMinimo(product.stockMinimo?.toString() || "");
+        setStockMinimo(
+          product.stockMinimo !== null && product.stockMinimo !== undefined
+            ? product.stockMinimo.toString()
+            : ""
+        );
 
+        // Primero cargar las listas de opciones
         setProveedores(proveedoresData);
         setFamilias(familiasData);
+
+        // Luego establecer los valores seleccionados
+        // IMPORTANTE: Esperar un ciclo de renderizado para establecer los selects
+        setTimeout(() => {
+          setProveedorId(
+            product.proveedorId ? product.proveedorId.toString() : null
+          );
+          setFamiliaId(
+            product.familiaId ? product.familiaId.toString() : null
+          );
+          setDataLoaded(true); // Marcar que los datos están listos
+        }, 100);
 
         if (product.precioVenta && product.precioCompra) {
           const porcentaje = (
@@ -79,8 +94,8 @@ const EditProductScreen = ({ route, navigation }) => {
           setPorcentajeAumento(porcentaje);
         }
       } catch (error) {
+        console.error("Error cargando datos:", error);
         Alert.alert("Error", "No se pudo cargar el producto");
-        console.error(error);
       } finally {
         setInitialLoad(false);
       }
@@ -88,6 +103,8 @@ const EditProductScreen = ({ route, navigation }) => {
 
     loadData();
   }, [productId]);
+
+
 
   useEffect(() => {
     if (mostrarCalculadora && precioCompra && porcentajeAumento) {
@@ -109,14 +126,7 @@ const EditProductScreen = ({ route, navigation }) => {
   };
 
   const handleUpdateProduct = async () => {
-    if (
-      !nombre ||
-      !descripcion ||
-      !precioVenta ||
-      !precioCompra ||
-      !stock ||
-      !proveedorId
-    ) {
+    if (!nombre || !descripcion || !precioVenta || !precioCompra || !stock) {
       Alert.alert("Error", "Los campos marcados con * son obligatorios");
       return;
     }
@@ -128,6 +138,7 @@ const EditProductScreen = ({ route, navigation }) => {
       );
       return;
     }
+
     if (stockMinimo && parseInt(stock) < parseInt(stockMinimo)) {
       Alert.alert(
         "Advertencia",
@@ -144,13 +155,14 @@ const EditProductScreen = ({ route, navigation }) => {
         precioCompra: parseFloat(precioCompra),
         stock: parseInt(stock),
         stockMinimo: stockMinimo ? parseInt(stockMinimo) : null,
-        proveedorId,
+        proveedorId: proveedorId || null,
         familiaId: familiaId || null,
         codigoBarras: codigoBarras ? codigoBarras : null,
       });
       Alert.alert("Éxito", "Producto actualizado correctamente");
       navigation.goBack();
     } catch (error) {
+      console.error("Error actualizando producto:", error); // Debug
       Alert.alert("Error", error.message || "Error al actualizar el producto");
     } finally {
       setLoading(false);
@@ -166,6 +178,7 @@ const EditProductScreen = ({ route, navigation }) => {
       <LinearGradient colors={["#000428", "#004e92"]} style={styles.fullScreen}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="white" />
+          <Text style={styles.loadingText}>Cargando producto...</Text>
         </View>
       </LinearGradient>
     );
@@ -184,9 +197,6 @@ const EditProductScreen = ({ route, navigation }) => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Espacio para el header */}
-          <View style={styles.formContainer} />
-
           <TextInput
             placeholder="Nombre del producto*"
             placeholderTextColor="#aaa"
@@ -303,13 +313,16 @@ const EditProductScreen = ({ route, navigation }) => {
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={proveedorId}
-              onValueChange={setProveedorId}
+              onValueChange={(itemValue) => {
+                console.log("Proveedor seleccionado:", itemValue); // Debug
+                setProveedorId(itemValue);
+              }}
               style={styles.picker}
               dropdownIconColor="white"
             >
               <Picker.Item
                 label="Selecciona un proveedor*"
-                value=""
+                value={null}
                 color="#aaa"
               />
               {proveedores.map((proveedor) => (
@@ -317,7 +330,7 @@ const EditProductScreen = ({ route, navigation }) => {
                   key={proveedor.id}
                   label={proveedor.nombre}
                   value={proveedor.id}
-                  color="black"
+                  color="white"
                 />
               ))}
             </Picker>
@@ -326,13 +339,16 @@ const EditProductScreen = ({ route, navigation }) => {
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={familiaId}
-              onValueChange={setFamiliaId}
+              onValueChange={(itemValue) => {
+                console.log("Familia seleccionada:", itemValue); // Debug
+                setFamiliaId(itemValue);
+              }}
               style={styles.picker}
               dropdownIconColor="white"
             >
               <Picker.Item
                 label="Selecciona una familia (opcional)"
-                value=""
+                value={null}
                 color="#aaa"
               />
               {familias.map((familia) => (
@@ -340,7 +356,7 @@ const EditProductScreen = ({ route, navigation }) => {
                   key={familia.id}
                   label={familia.nombre}
                   value={familia.id}
-                  color="black"
+                  color="white"
                 />
               ))}
             </Picker>
@@ -364,9 +380,6 @@ const EditProductScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  formContainer: {
-    paddingBottom: 100,
-  },
   fullScreen: {
     flex: 1,
   },
@@ -389,22 +402,6 @@ const styles = StyleSheet.create({
   multilineInput: {
     minHeight: 100,
     textAlignVertical: "top",
-  },
-  calculatorButton: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.2)",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-  },
-  calculatorButtonText: {
-    color: "white",
-    fontWeight: "600",
-    marginRight: 10,
   },
   marginInfo: {
     backgroundColor: "rgba(255,255,255,0.1)",
@@ -488,6 +485,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  loadingText: {
+    color: "white",
+    marginTop: 10,
+    fontSize: 16,
   },
 });
 

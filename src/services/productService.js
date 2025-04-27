@@ -149,7 +149,7 @@ export const getProductById = async (productId) => {
 
     const data = productSnap.data();
 
-    // Obtener proveedores asociados (de producto_proveedor)
+    // Obtener proveedores asociados
     const proveedoresQuery = query(
       collection(db, 'producto_proveedor'),
       where('productoId', '==', productId)
@@ -157,25 +157,11 @@ export const getProductById = async (productId) => {
     const proveedoresSnapshot = await getDocs(proveedoresQuery);
     const proveedorIds = proveedoresSnapshot.docs.map(doc => doc.data().proveedorId);
 
-    // Obtener nombres de proveedores
-    const proveedoresNombres = [];
-    for (const id of proveedorIds) {
-      const provRef = doc(db, 'proveedores', id);
-      const provSnap = await getDoc(provRef);
-      if (provSnap.exists()) {
-        proveedoresNombres.push(provSnap.data().nombre);
-      }
-    }
+    // Si no hay en producto_proveedor, usar el proveedorId directo del producto
+    const proveedorPrincipal = proveedorIds.length > 0 ? proveedorIds[0] : data.proveedorId || null;
 
-    // Obtener nombre de la familia si existe
-    let familiaNombre = '';
-    if (data.familiaId) {
-      const familiaRef = doc(db, 'familias', data.familiaId);
-      const familiaSnap = await getDoc(familiaRef);
-      if (familiaSnap.exists()) {
-        familiaNombre = familiaSnap.data().nombre;
-      }
-    }
+    // Obtener familia
+    const familia = data.familiaId || null;
 
     return {
       id: productSnap.id,
@@ -186,11 +172,10 @@ export const getProductById = async (productId) => {
       stock: data.stock || 0,
       stockMinimo: data.stockMinimo !== undefined ? data.stockMinimo : null,
       codigoBarras: data.codigoBarras?.toString() || '',
+      proveedorId: proveedorPrincipal, // ID principal para el selector
       proveedorIds: proveedorIds.length > 0 ? proveedorIds : [data.proveedorId].filter(Boolean),
-      proveedores: proveedoresNombres.length > 0 ? proveedoresNombres : ['Sin proveedor'],
-      familiaId: data.familiaId || '',
-      familiaNombre: familiaNombre || 'Sin familia',
-      createdAt: data.createdAt?.toDate() || null
+      familiaId: familia, // ID de familia
+      // ... resto de campos
     };
   } catch (error) {
     console.error("Error getting product by ID:", error);
