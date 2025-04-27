@@ -22,6 +22,7 @@ import {
   searchProductByBarcode,
   getFamilias,
   createFamilia,
+  searchProducts, // Importa la nueva función aquí
 } from "../services/productService";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -171,23 +172,24 @@ const ProductListScreen = ({ navigation }) => {
 
   const handleSearch = async () => {
     if (searchTerm.trim() === "") {
-      setFilteredProducts(products);
+      setFilteredProducts(products); // Si no hay término de búsqueda, muestra todos los productos cargados
       return;
     }
 
-    const filtered = products.filter((product) => {
-      const nombreMatch = product.nombre
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const codigoBarrasStr = product.codigoBarras
-        ? product.codigoBarras.toString()
-        : "";
-      const codigoMatch = codigoBarrasStr.includes(searchTerm);
+    try {
+      setLoading(true);
 
-      return nombreMatch || codigoMatch;
-    });
+      // Realizar búsqueda en Firestore
+      const resultados = await searchProducts(searchTerm.trim());
 
-    setFilteredProducts(filtered);
+      // Actualizar los productos filtrados con los resultados de la base de datos
+      setFilteredProducts(resultados);
+    } catch (error) {
+      console.error("Error al buscar productos:", error);
+      Alert.alert("Error", "No se pudo realizar la búsqueda");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteProduct = async (productId) => {

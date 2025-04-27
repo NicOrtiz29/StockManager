@@ -19,7 +19,6 @@ export const createProduct = async (product) => {
   }
 };
 
-// ... (todo el código anterior se mantiene igual)
 
 export const getProducts = async (limite = 10, ultimoVisible = null) => {
   try {
@@ -271,6 +270,48 @@ export const searchProductByBarcode = async (barcode) => {
   } catch (error) {
     console.error("Error searching product by barcode:", error);
     throw new Error('Error al buscar el producto');
+  }
+};
+
+// Buscar productos por nombre o descripción
+export const searchProducts = async (searchTerm) => {
+  try {
+    const db = getFirestore();
+    const productosRef = collection(db, 'productos');
+
+    // Crear consultas para buscar por nombre o código de barras
+    const nombreQuery = query(
+      productosRef,
+      where('nombre', '>=', searchTerm),
+      where('nombre', '<=', searchTerm + '\uf8ff')
+    );
+
+    const codigoBarrasQuery = query(
+      productosRef,
+      where('codigoBarras', '==', Number(searchTerm)) // Convertir a número para buscar por código de barras
+    );
+
+    // Ejecutar ambas consultas
+    const [nombreSnapshot, codigoBarrasSnapshot] = await Promise.all([
+      getDocs(nombreQuery),
+      getDocs(codigoBarrasQuery),
+    ]);
+
+    // Combinar los resultados
+    const resultados = [
+      ...nombreSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+      ...codigoBarrasSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+    ];
+
+    // Eliminar duplicados (si un producto coincide en ambas consultas)
+    const uniqueResultados = Array.from(
+      new Map(resultados.map((item) => [item.id, item])).values()
+    );
+
+    return uniqueResultados;
+  } catch (error) {
+    console.error("Error searching products:", error);
+    throw error;
   }
 };
 
