@@ -23,6 +23,8 @@ import {
   getFamilias,
   createFamilia,
   searchProducts, // Importa la nueva función aquí
+  updateProduct, // Importa la función para actualizar productos
+  getProveedorById, // Importa la función para obtener proveedor por ID
 } from "../services/productService";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -75,12 +77,28 @@ const ProductListScreen = ({ navigation }) => {
       const { productos, ultimoVisible: nuevoUltimoVisible } =
         await getProducts(limite, reset ? null : ultimoVisible);
 
+      // Relacionar el proveedor con cada producto
+      const productosConProveedor = await Promise.all(
+        productos.map(async (producto) => {
+          if (producto.proveedorId) {
+            const proveedor = await getProveedorById(producto.proveedorId); // Función para obtener el proveedor
+            return { ...producto, proveedor };
+          }
+          return producto;
+        })
+      );
+
       if (reset) {
-        setProducts(productos);
-        setFilteredProducts(productos);
+        setProducts(productosConProveedor);
+        setFilteredProducts(productosConProveedor);
       } else {
-        setProducts((prev) => [...prev, ...productos]);
-        setFilteredProducts((prev) => [...prev, ...productos]);
+        const uniqueProducts = [
+          ...new Map(
+            [...products, ...productosConProveedor].map((item) => [item.id, item])
+          ).values(),
+        ];
+        setProducts(uniqueProducts);
+        setFilteredProducts(uniqueProducts);
       }
 
       setUltimoVisible(nuevoUltimoVisible);
@@ -165,8 +183,7 @@ const ProductListScreen = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchData();
-      loadFamilias();
+      fetchData(10, true); // Recarga los productos al volver a esta pantalla
     }, [])
   );
 
@@ -260,6 +277,31 @@ const ProductListScreen = ({ navigation }) => {
     });
   };
 
+  const handleUpdateProduct = (updatedProduct) => {
+    setProducts((prevProducts) =>
+      prevProducts.map((product) =>
+        product.id === updatedProduct.id ? updatedProduct : product
+      )
+    );
+    setFilteredProducts((prevFilteredProducts) =>
+      prevFilteredProducts.map((product) =>
+        product.id === updatedProduct.id ? updatedProduct : product
+      )
+    );
+  };
+
+  const handleSave = async () => {
+    try {
+      await updateProduct(productId, updatedData);
+      if (route.params?.onUpdateProduct) {
+        route.params.onUpdateProduct({ id: productId, ...updatedData });
+      }
+      navigation.goBack();
+    } catch (error) {
+      console.error("Error al actualizar el producto:", error);
+    }
+  };
+
   const renderFooter = () => {
     if (!cargandoMas) return null;
 
@@ -293,7 +335,10 @@ const ProductListScreen = ({ navigation }) => {
         <View style={styles.actionsContainer}>
           <TouchableOpacity
             onPress={() =>
-              navigation.navigate("EditProduct", { productId: item.id })
+              navigation.navigate("EditProduct", {
+                productId: item.id,
+                onUpdateProduct: handleUpdateProduct,
+              })
             }
             style={styles.editButton}
           >
@@ -383,14 +428,14 @@ const ProductListScreen = ({ navigation }) => {
             </Text>
           </View>
         )}
+
         {item.proveedor && (
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Proveedor:</Text>
             <Text
               style={[styles.detailValue, isTablet && styles.tabletDetailValue]}
             >
-              {item.proveedor.nombre || item.proveedor}{" "}
-              {/* Ajusta según cómo venga el dato */}
+              {item.proveedor.nombre || "Sin proveedor"}
             </Text>
           </View>
         )}
@@ -540,11 +585,7 @@ const ProductListScreen = ({ navigation }) => {
       ) : (
         <FlatList
           data={filteredProducts}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={[
-            styles.listContent,
-            isTablet && styles.tabletListContent,
-          ]}
+          keyExtractor={(item) => item.id.toString()} // Asegúrate de que `item.id` sea único
           renderItem={renderProductItem}
           numColumns={isTablet ? (isLandscape ? 3 : 2) : 1}
           columnWrapperStyle={(isTablet || isLandscape) && styles.columnWrapper}
