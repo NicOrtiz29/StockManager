@@ -173,6 +173,42 @@ const EditProductScreen = ({ route, navigation }) => {
     setMostrarCalculadora(!mostrarCalculadora);
   };
 
+  const handleSearch = async () => {
+    const trimmedSearchTerm = searchTerm.trim();
+
+    // No buscar si el término tiene menos de 2 caracteres
+    if (trimmedSearchTerm.length < 2) {
+      setFilteredProducts(products); // Mostrar todos los productos si no hay búsqueda válida
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Convertir el término de búsqueda a minúsculas
+      const lowerCaseSearchTerm = trimmedSearchTerm.toLowerCase();
+
+      // Filtrar productos localmente (si ya están cargados)
+      const filtered = products.filter((product) => {
+        const nombreMatch = product.nombre
+          .toLowerCase()
+          .includes(lowerCaseSearchTerm);
+        const descripcionMatch = product.descripcion
+          .toLowerCase()
+          .includes(lowerCaseSearchTerm);
+
+        return nombreMatch || descripcionMatch;
+      });
+
+      setFilteredProducts(filtered);
+    } catch (error) {
+      console.error("Error al buscar productos:", error);
+      Alert.alert("Error", "No se pudo realizar la búsqueda");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (initialLoad) {
     return (
       <LinearGradient colors={["#000428", "#004e92"]} style={styles.fullScreen}>

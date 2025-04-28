@@ -4,11 +4,11 @@
     "slug": "stock-manager",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/iconoaplicacion.png",
+    "icon": "./assets/iconoaplicacion-espacio.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/iconoaplicacion-espacio.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -24,7 +24,7 @@
     ],
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/iconoaplicacion.png",
+        "foregroundImage": "./assets/iconoaplicacion-espacio.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [

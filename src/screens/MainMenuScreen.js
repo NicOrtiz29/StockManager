@@ -50,7 +50,7 @@ const MainMenuScreen = ({ navigation }) => {
     <LinearGradient colors={['#000428', '#004e92']} style={styles.gradient}>
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.header}>TLN AUTORRADIO</Text>
+          <Text style={styles.header}> STOCK MANAGER </Text>
 
           <View style={styles.grid}>
             {menuItems.map((item, index) => (

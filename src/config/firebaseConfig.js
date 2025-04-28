@@ -5,12 +5,12 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBhInymqBkQ3hyw90CC8uuX7dOqEySw2DU",
-  authDomain: "stock-manager-app-8c4ee.firebaseapp.com",
-  projectId: "stock-manager-app-8c4ee",
-  storageBucket: "stock-manager-app-8c4ee.appspot.com",
-  messagingSenderId: "887170478122",
-  appId: "1:887170478122:web:c6ee5ef6d981c1b624d353"
+  apiKey: "AIzaSyCW_HoQF78-fUbTVZxTvac6nRPezOnKtzE",
+  authDomain: "stock-ali.firebaseapp.com",
+  projectId: "stock-ali",
+  storageBucket: "stock-ali.firebasestorage.app",
+  messagingSenderId: "877187602868",
+  appId: "1:877187602868:web:8f5a0a1fba732004e3fae1",
 };
 
 // Initialize Firebase
