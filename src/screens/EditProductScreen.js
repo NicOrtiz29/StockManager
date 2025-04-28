@@ -229,7 +229,7 @@ const EditProductScreen = ({ route, navigation }) => {
         keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContainer}
+          contentContainerStyle={[styles.scrollContainer, { paddingTop: 90 }]} // Ajusta el paddingTop según la altura del header
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
