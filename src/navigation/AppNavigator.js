@@ -21,6 +21,7 @@ import DetalleVentaScreen from "../screens/DetalleVentaScreen";
 import AddUserScreen from "../screens/AddUserScreen";
 import ImportExcelScreen from "../screens/ImportExcelScreen";
 import UserListScreen from "../screens/UserListScreen";
+import EditUserScreen from "../screens/EditUserScreen";
 
 const Stack = createStackNavigator();
 
@@ -437,6 +438,18 @@ const AppNavigator = () => {
               borderBottomWidth: 0,
               elevation: 0,
               shadowOpacity: 0,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="EditUserScreen"
+          component={EditUserScreen}
+          options={{
+            headerShown: true,
+            title: "Editar Usuario",
+            headerTintColor: "white",
+            headerStyle: {
+              backgroundColor: "#004e92",
             },
           }}
         />

@@ -11,11 +11,10 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons'; // Asegúrate de tener instalado @expo/vector-icons
+import { Ionicons } from '@expo/vector-icons';
 import { db } from '../config/firebaseConfig';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 
-// Detección de dispositivo
 const { width } = Dimensions.get('window');
 const isTablet = width >= 768;
 const isSmallDevice = width < 350;
@@ -48,6 +47,30 @@ const UserListScreen = ({ navigation }) => {
 
     fetchUsers();
   }, []);
+
+  const handleDeleteUser = async (userId) => {
+    Alert.alert(
+      'Eliminar Usuario',
+      '¿Estás seguro de que deseas eliminar este usuario?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, 'usuarios', userId));
+              setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+              Alert.alert('Éxito', 'Usuario eliminado correctamente.');
+            } catch (error) {
+              console.error('Error al eliminar el usuario:', error);
+              Alert.alert('Error', 'No se pudo eliminar el usuario.');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <LinearGradient colors={['#000428', '#004e92']} style={styles.fullScreen}>
@@ -84,6 +107,28 @@ const UserListScreen = ({ navigation }) => {
                   >
                     {user.nombre || user.name || 'Nombre no disponible'}
                   </Text>
+                  <View style={styles.actionsContainer}>
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('EditUserScreen', { userId: user.id })}
+                      style={styles.editButton}
+                    >
+                      <Ionicons
+                        name="pencil"
+                        size={isTablet ? 22 : isSmallDevice ? 16 : 18}
+                        color="white"
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => handleDeleteUser(user.id)}
+                      style={styles.deleteButton}
+                    >
+                      <Ionicons
+                        name="trash"
+                        size={isTablet ? 22 : isSmallDevice ? 16 : 18}
+                        color="white"
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 <Text
@@ -126,10 +171,9 @@ const UserListScreen = ({ navigation }) => {
           )}
         </ScrollView>
 
-        {/* Botón flotante */}
         <TouchableOpacity
           style={styles.floatingButton}
-          onPress={() => navigation.navigate('AddUserScreen')} // Navega a la pantalla de agregar usuario
+          onPress={() => navigation.navigate('AddUserScreen')}
         >
           <Ionicons name="add" size={30} color="white" />
         </TouchableOpacity>
@@ -191,10 +235,19 @@ const styles = StyleSheet.create({
     color: 'white',
     flex: 1,
   },
+  smallDeviceProductName: {
+    fontSize: 15,
+  },
+  tabletProductName: {
+    fontSize: 22,
+  },
   description: {
     color: 'rgba(255,255,255,0.7)',
     marginBottom: isTablet ? 12 : isSmallDevice ? 6 : 8,
     fontSize: isTablet ? 16 : isSmallDevice ? 13 : 14,
+  },
+  tabletDescription: {
+    fontSize: 16,
   },
   detailsContainer: {
     marginTop: isTablet ? 12 : isSmallDevice ? 5 : 8,
@@ -215,6 +268,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: isTablet ? 16 : isSmallDevice ? 13 : 14,
   },
+  tabletDetailValue: {
+    fontSize: 16,
+  },
   noProductsText: {
     color: 'rgba(255,255,255,0.7)',
     fontSize: isTablet ? 18 : isSmallDevice ? 14 : 16,
@@ -229,11 +285,32 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5, // Sombra en Android
-    shadowColor: '#000', // Sombra en iOS
+    elevation: 5,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+  },
+  editButton: {
+    width: isTablet ? 40 : isSmallDevice ? 28 : 30,
+    height: isTablet ? 40 : isSmallDevice ? 28 : 30,
+    borderRadius: isTablet ? 20 : isSmallDevice ? 14 : 15,
+    backgroundColor: '#4CAF50',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: isTablet ? 15 : isSmallDevice ? 8 : 10,
+  },
+  deleteButton: {
+    width: isTablet ? 40 : isSmallDevice ? 28 : 30,
+    height: isTablet ? 40 : isSmallDevice ? 28 : 30,
+    borderRadius: isTablet ? 20 : isSmallDevice ? 14 : 15,
+    backgroundColor: '#F44336',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: isTablet ? 15 : isSmallDevice ? 8 : 10,
   },
 });
 
