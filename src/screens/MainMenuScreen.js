@@ -43,6 +43,7 @@ const MainMenuScreen = ({ navigation }) => {
     { title: "Aumentos", icon: "trending-up", action: () => navigation.navigate('BulkPriceUpdate') },
     { title: "Historial Ventas", icon: "receipt", action: () => navigation.navigate('HistorialVentas') },
     { title: "Agregar Usuario", icon: "person-add", action: () => navigation.navigate('AddUserScreen') },
+    { title: "Usuarios", icon: "people-circle", action: () => navigation.navigate('UserList') },
     { title: "Cerrar Sesión", icon: "log-out", action: handleLogout },
   ];
 

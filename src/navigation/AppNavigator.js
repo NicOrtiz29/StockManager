@@ -20,6 +20,7 @@ import HistorialVentasScreen from "../screens/HistorialVentasScreen";
 import DetalleVentaScreen from "../screens/DetalleVentaScreen";
 import AddUserScreen from "../screens/AddUserScreen";
 import ImportExcelScreen from "../screens/ImportExcelScreen";
+import UserListScreen from "../screens/UserListScreen";
 
 const Stack = createStackNavigator();
 
@@ -387,6 +388,35 @@ const AppNavigator = () => {
           options={{
             headerShown: true,
             title: "Agregar Usuario",
+            headerBackground: () => (
+              <LinearGradient
+                colors={["#000428", "#004e92"]}
+                style={{ flex: 1 }}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              />
+            ),
+            headerTintColor: "white",
+            headerTitleAlign: "center",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+            },
+            headerTransparent: true,
+            headerStyle: {
+              height: 80,
+              borderBottomWidth: 0,
+              elevation: 0,
+              shadowOpacity: 0,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="UserList"
+          component={UserListScreen}
+          options={{
+            headerShown: true,
+            title: "Lista de Usuarios",
             headerBackground: () => (
               <LinearGradient
                 colors={["#000428", "#004e92"]}
