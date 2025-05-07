@@ -30,7 +30,9 @@
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ],
       "package": "com.tudominio.stockmanager"
     },
@@ -39,12 +41,13 @@
       "bundleIdentifier": "com.tudominio.stockmanager",
       "infoPlist": {
         "NSCameraUsageDescription": "Necesitamos acceso a tu cámara para escanear códigos de barras",
-        "NSPhotoLibraryUsageDescription": "Permite a la aplicación acceder a tus fotos para subir imágenes de productos"
+        "NSPhotoLibraryUsageDescription": "Permite a la aplicación acceder a tus fotos para subir imágenes de productos",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "webpack"  // ← para la web
+      "bundler": "webpack"
     },
     "extra": {
       "eas": {

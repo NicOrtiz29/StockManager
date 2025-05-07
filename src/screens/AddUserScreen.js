@@ -1,13 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, collection, addDoc } from 'firebase/firestore';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform
+} from 'react-native';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, addDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebaseConfig';
 
 const AddUserScreen = () => {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rol, setRol] = useState('usuario');
   const [loading, setLoading] = useState(false);
 
   const handleAgregarUsuario = async () => {
@@ -26,25 +36,26 @@ const AddUserScreen = () => {
     try {
       // 1. Crear usuario en Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
+
       // 2. Guardar información adicional en Firestore
       await addDoc(collection(db, 'usuarios'), {
         uid: userCredential.user.uid,
         nombre,
         email,
-        rol: 'usuario', // Puedes definir roles si necesitas
+        rol,
         fechaCreacion: new Date(),
       });
 
       Alert.alert('Éxito', `Usuario ${nombre} agregado correctamente.`);
-      
+
       // Limpiar campos
       setNombre('');
       setEmail('');
       setPassword('');
+      setRol('usuario');
     } catch (error) {
       console.error('Error al agregar usuario:', error);
-      
+
       let errorMessage = 'Ocurrió un error al registrar el usuario.';
       switch (error.code) {
         case 'auth/email-already-in-use':
@@ -57,7 +68,7 @@ const AddUserScreen = () => {
           errorMessage = 'La contraseña es demasiado débil.';
           break;
       }
-      
+
       Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
@@ -65,7 +76,7 @@ const AddUserScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
@@ -98,8 +109,26 @@ const AddUserScreen = () => {
         secureTextEntry
       />
 
-      <TouchableOpacity 
-        style={[styles.button, loading && styles.buttonDisabled]} 
+      <View style={styles.rolContainer}>
+        <Text style={styles.label}>Seleccionar Rol:</Text>
+        <View style={styles.rolButtons}>
+          <TouchableOpacity
+            style={[styles.rolButton, rol === 'usuario' && styles.rolButtonSelected]}
+            onPress={() => setRol('usuario')}
+          >
+            <Text style={styles.rolButtonText}>Usuario</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.rolButton, rol === 'administrador' && styles.rolButtonSelected]}
+            onPress={() => setRol('administrador')}
+          >
+            <Text style={styles.rolButtonText}>Administrador</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <TouchableOpacity
+        style={[styles.button, loading && styles.buttonDisabled]}
         onPress={handleAgregarUsuario}
         disabled={loading}
       >
@@ -133,6 +162,35 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
+  },
+  rolContainer: {
+    marginBottom: 20,
+  },
+  label: {
+    color: 'white',
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  rolButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  rolButton: {
+    flex: 1,
+    backgroundColor: '#ffffff20',
+    padding: 10,
+    marginHorizontal: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+  },
+  rolButtonSelected: {
+    backgroundColor: '#007bff',
+  },
+  rolButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   button: {
     backgroundColor: '#004e92',
